@@ -1,0 +1,24 @@
+<div class="container py-4">
+  <h3 class="mb-3">Bảng điều khiển</h3>
+
+  <div class="row g-3">
+    <div class="col-md-4">
+      <div class="card p-3 shadow-sm">
+        <div class="fw-semibold">Sản phẩm của tôi</div>
+        <div class="display-6">{{stats.totalProducts}}</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card p-3 shadow-sm">
+        <div class="fw-semibold">Đơn đang chờ</div>
+        <div class="display-6">{{stats.pendingOrders}}</div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card p-3 shadow-sm">
+        <div class="fw-semibold">Doanh thu</div>
+        <div class="display-6">{{stats.revenue | currency:'₫'}}</div>
+      </div>
+    </div>
+  </div>
+</div>

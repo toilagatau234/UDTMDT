@@ -1,0 +1,29 @@
+<div class="container py-4">
+  <h4 class="mb-3">Đơn hàng của tôi</h4>
+
+  <table class="table table-striped align-middle">
+    <thead>
+      <tr>
+        <th>Mã đơn</th>
+        <th>SL mặt hàng</th>
+        <th>Tổng tiền</th>
+        <th>Trạng thái</th>
+        <th style="width:180px;"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr ng-repeat="o in orders">
+        <td><a href="#!/order/detail/{{o._id}}">{{o._id}}</a></td>
+        <td>{{(o.items || []).length}}</td>
+        <td>{{o.total | number}} ₫</td>
+        <td>
+          <select class="form-select form-select-sm" ng-model="o.status"
+                  ng-options="s for s in statuses"></select>
+        </td>
+        <td class="text-end">
+          <button class="btn btn-sm btn-primary" ng-click="updateStatus(o)">Cập nhật</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
