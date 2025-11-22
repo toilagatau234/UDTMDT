@@ -1,0 +1,54 @@
+.Discount-List {
+  border-radius: 8px;
+  border: 1px solid rgb(230, 230, 230);
+  overflow: hidden;
+  background-repeat: no-repeat;
+  background-size: cover;
+  height: 576px;
+  &.bg {
+    &-0 {
+      background: url("https://res.cloudinary.com/dmlv4rbtm/image/upload/v1763452007/kara_u21ou3_yyqbik.jpg");
+    }
+    &-1 {
+      background: url("https://res.cloudinary.com/dmlv4rbtm/image/upload/v1763452008/laptop_baavwf_wxmjxx.jpg");
+    }
+    &-2 {
+      background: url("https://res.cloudinary.com/dmlv4rbtm/image/upload/v1763452008/msas_xdbc6o_zf9cts.jpg");
+    }
+    &-3 {
+      background: url("https://res.cloudinary.com/dmlv4rbtm/image/upload/v1763452009/sda1_cexhqy_pwcqfd.jpg");
+    }
+    &-4 {
+      background: url("https://res.cloudinary.com/dmlv4rbtm/image/upload/v1763452008/router_djhtbh_nfgdqu.jpg");
+    }
+  }
+  .header {
+    height: 64px;
+    &-item {
+      & > * {
+        color: grey;
+      }
+      &.active {
+        background-color: transparent;
+        & > * {
+          color: #f1f1f1;
+        }
+      }
+    }
+  }
+
+  .Related-Products {
+    background-color: transparent;
+  }
+}
+
+@media only screen and (max-width: 768px) {
+  .Discount-List {
+    .header {
+      display: none;
+    }
+    .countdown {
+      display: none;
+    }
+  }
+}
