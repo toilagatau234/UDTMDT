@@ -1,4 +1,3 @@
-const { Model } = require('mongoose');
 const helpers = require('../helpers');
 const ProductDescModel = require('../models/product.models/description.model');
 const ProductModel = require('../models/product.models/product.model');

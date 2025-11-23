@@ -26,7 +26,7 @@ const routes = [
   {
     path: constants.ROUTES.HOME,
     exact: true,
-    main: () => <HomePage />,
+    main: () => <Homepage />,
   },
   {
     path: constants.ROUTES.PRODUCT,
@@ -91,6 +91,7 @@ const renderRoutes = (routes) => {
     return <Route key={index} path={path} exact={exact} component={main} />;
   });
 };
+
 
 export default {
   routes,

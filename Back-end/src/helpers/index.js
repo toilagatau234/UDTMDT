@@ -1,22 +1,22 @@
-const VerifyModel = require('../models/account.models/verify.model');
-const constants = require('../constants/index');
-const LaptopModel = require('../models/product.models/computer.models/laptop.model');
-const DisplayModel = require('../models/product.models/computer.models/display.model');
-const DiskModel = require('../models/product.models/computer.models/disk.model');
-const MainboardModel = require('../models/product.models/computer.models/mainboard.model');
-const MobileModel = require('../models/product.models/mobile.models/mobile.model');
-const BackupChargerModel = require('../models/product.models/mobile.models/backupCharger.model');
-const HeadphoneModel = require('../models/product.models/peripherals.models/headphone.model');
-const RamModel = require('../models/product.models/computer.models/ram.model');
-const KeyboardModel = require('../models/product.models/peripherals.models/keyboard.model');
-const MonitorModel = require('../models/product.models/peripherals.models/monitor.model');
-const MouseModel = require('../models/product.models/peripherals.models/mouse.model');
-const RouterModel = require('../models/product.models/peripherals.models/router.model');
-const SpeakerModel = require('../models/product.models/peripherals.models/speaker.model');
-const CameraModel = require('../models/product.models/camera.models/camera.model');
-const WebcamModel = require('../models/product.models/camera.models/webcam.model');
+const VerifyModel = require("../models/account.models/verify.model");
+const constants = require("../constants/index");
+const LaptopModel = require("../models/product.models/computer.models/laptop.model");
+const DisplayModel = require("../models/product.models/computer.models/display.model");
+const DiskModel = require("../models/product.models/computer.models/disk.model");
+const MainboardModel = require("../models/product.models/computer.models/mainboard.model");
+const MobileModel = require("../models/product.models/mobile.models/mobile.model");
+const BackupChargerModel = require("../models/product.models/mobile.models/backupCharger.model");
+const HeadphoneModel = require("../models/product.models/peripherals.models/headphone.model");
+const RamModel = require("../models/product.models/computer.models/ram.model");
+const KeyboardModel = require("../models/product.models/peripherals.models/keyboard.model");
+const MonitorModel = require("../models/product.models/peripherals.models/monitor.model");
+const MouseModel = require("../models/product.models/peripherals.models/mouse.model");
+const RouterModel = require("../models/product.models/peripherals.models/router.model");
+const SpeakerModel = require("../models/product.models/peripherals.models/speaker.model");
+const CameraModel = require("../models/product.models/camera.models/camera.model");
+const WebcamModel = require("../models/product.models/camera.models/webcam.model");
 const CpuModel = require("../models/product.models/computer.models/cpu.model");
-const AddressModel = require('../models/address.model');
+const AddressModel = require("../models/address.model");
 
 //fn: tạo mã xác thực
 const generateVerifyCode = (numberOfDigits) => {
@@ -26,7 +26,7 @@ const generateVerifyCode = (numberOfDigits) => {
   let numberStr = number.toString();
   const l = numberStr.length;
   for (let i = 0; i < 6 - l; ++i) {
-    numberStr = '0' + numberStr;
+    numberStr = "0" + numberStr;
   }
   return numberStr;
 };
@@ -92,8 +92,8 @@ const convertProductType = (type = 0) => {
 };
 
 // fn: xác định loại sản phẩm thông qua string
-const typeOfProduct = (str = '') => {
-  if (str === undefined || str === '') return [];
+const typeOfProduct = (str = "") => {
+  if (str === undefined || str === "") return [];
   let typeList = [];
   const strLow = str.toLowerCase();
   const list = constants.PRODUCT_TYPES_VN;
@@ -107,34 +107,34 @@ const typeOfProduct = (str = '') => {
 // fn: chuyển object chứa regex dạng string, ex: {$regex: '/^apple$/i'} => {$regex: /^apple$/i}
 const convertObjectContainsRegex = (obj) => {
   const newObj = { ...obj };
-  if (newObj.hasOwnProperty('$or')) {
+  if (newObj.hasOwnProperty("$or")) {
     // đa giá trị
-    newObj['$or'].forEach((item) => {
+    newObj["$or"].forEach((item) => {
       for (let key in item) {
-        if (typeof item[key] === 'object') {
+        if (typeof item[key] === "object") {
           for (const k in item[key]) {
-            if (k === '$regex' && typeof item[key][k] === 'string') {
-              item[key][k] = new RegExp(item[key][k], 'gi');
+            if (k === "$regex" && typeof item[key][k] === "string") {
+              item[key][k] = new RegExp(item[key][k], "gi");
             }
           }
         }
-        if (key === '$regex' && typeof item[key] === 'string') {
-          item[key] = new RegExp(item[key], 'gi');
+        if (key === "$regex" && typeof item[key] === "string") {
+          item[key] = new RegExp(item[key], "gi");
         }
       }
     });
   } else {
     // đơn giá trị
     for (let key in newObj) {
-      if (typeof newObj[key] === 'object') {
+      if (typeof newObj[key] === "object") {
         for (const k in newObj[key]) {
-          if (k === '$regex' && typeof newObj[key][k] === 'string') {
-            newObj[key][k] = new RegExp(newObj[key][k], 'gi');
+          if (k === "$regex" && typeof newObj[key][k] === "string") {
+            newObj[key][k] = new RegExp(newObj[key][k], "gi");
           }
         }
       }
-      if (key === '$regex' && typeof newObj[key] === 'string') {
-        newObj[key] = new RegExp(newObj[key], 'gi');
+      if (key === "$regex" && typeof newObj[key] === "string") {
+        newObj[key] = new RegExp(newObj[key], "gi");
       }
     }
   }
@@ -144,7 +144,7 @@ const convertObjectContainsRegex = (obj) => {
 // fn: chuyển address id thành address string
 const convertAddress = async (address) => {
   try {
-    let result = '';
+    let result = "";
     const { province, district, wards, street, details } = address;
     const data = await AddressModel.findOne({ id: province.toString() });
     if (data) {
@@ -156,23 +156,23 @@ const convertAddress = async (address) => {
       });
 
       if (dis) {
-        const disName = dis ? dis.name : '';
+        const disName = dis ? dis.name : "";
         const ward = dis.wards.find((item) => item.id == wards.toString());
-        const wName = ward.prefix + ' ' + ward.name;
+        const wName = ward.prefix + " " + ward.name;
 
         const s = dis.streets
           ? dis.streets.find((item) => item.id == street.toString())
           : null;
-        const sName = s ? s.prefix + ' ' + s.name : '';
+        const sName = s ? s.prefix + " " + s.name : "";
         result =
           details +
-          ', ' +
+          ", " +
           sName +
-          ', ' +
+          ", " +
           wName +
-          ', ' +
+          ", " +
           disName +
-          ', ' +
+          ", " +
           proName;
       } else {
         return proName;
@@ -181,7 +181,7 @@ const convertAddress = async (address) => {
     return result;
   } catch (error) {
     console.log(error);
-    return '';
+    return "";
   }
 };
 

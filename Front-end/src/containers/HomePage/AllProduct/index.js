@@ -10,15 +10,14 @@ function AllProduct() {
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
-  // lấy sản phẩm
+  // Lấy sản phẩm
   useEffect(() => {
     let isSubscribe = true;
-    setIsLoading(true);
-    async function getAllProducts() {
+    const getAllProducts = async () => {
       try {
-        const response = await productApi.getAllProducts(page, 24);
-        if (response && isSubscribe) {
-          const { data, count } = response.data;
+        const reponse = await productApi.getAllProducts(page, 12);
+        if (reponse && isSubscribe) {
+          const { data, count } = reponse.data;
           setList(data);
           setTotal(count);
           setIsLoading(false);
@@ -26,14 +25,13 @@ function AllProduct() {
       } catch (error) {
         setIsLoading(false);
       }
-    }
-
+    };
     getAllProducts();
 
     return () => (isSubscribe = false);
   }, [page]);
 
-  // fn: Hiển thị sản phẩm
+  // Hiển thị sản phẩm
   const showProducts = (list) => {
     list = list ? list : [];
     return list.map((product, index) => {
@@ -57,14 +55,13 @@ function AllProduct() {
   };
 
   return (
-    <Row className="p-16" style={{ minHeight: 400 }} gutter={[16, 16]}>
+    <Row gutter={[16, 16]} className="p-16" style={{ minHeight: 400 }}>
       <Col span={24}>
-        <h2 className="font-weight-700">Tất cả sản phẩm</h2>
-        <div className="underline-title"></div>
+        <h2 className="font-weight-700 underline-title">Tất cả sản phẩm</h2>
       </Col>
       {isLoading ? (
         <Spin
-          className="trans-center"
+          className="transform-center"
           tip="Đang tải sản phẩm ..."
           size="large"
         />
@@ -75,9 +72,9 @@ function AllProduct() {
             <Pagination
               className="t-center"
               current={page}
-              pageSize={24}
+              pageSize={12}
               total={total}
-              onChange={(p) => setPage(p)}
+              onChange={(e) => setPage(e)}
               showSizeChanger={false}
             />
           </Col>

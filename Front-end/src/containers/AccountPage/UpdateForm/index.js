@@ -11,6 +11,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import userReducers from 'reducers/user';
 
 import * as Yup from 'yup';
+
+const suffixColor = "rgba(0, 0, 0, 0.25)";
+
 function UpdateAccountForm() {
   const user = useSelector((state) => state.user);
   const { _id, fullName, email, address, birthday, gender } = user;
@@ -30,30 +33,28 @@ function UpdateAccountForm() {
   const validationSchema = Yup.object().shape({
     email: Yup.string()
       .trim()
-      .required('* Email bạn là gì ?')
-      .email('* Email không hợp lệ !'),
+      .required("* Email bạn là gì ?")
+      .email("* Email không hợp lệ !"),
     fullName: Yup.string()
       .trim()
-      .required('* Tên bạn là gì ?')
+      .required("* Tên bạn là gì ?")
       .matches(
         /[^~!@#%\^&\*()_\+-=\|\\,\.\/\[\]{}'"`]/,
-        '* Không được chứa ký tự đặc biệt',
+        "* Không được chứa ký tự đặc biệt"
       )
-      .max(70, '* Tối đa 70 ký tự'),
+      .max(70, "* Tối đa 70 ký tự"),
     birthday: Yup.date()
       .notRequired()
-      .min(new Date(1900, 1, 1), '* Năm sinh từ 1900')
+      .min(new Date(1900, 1, 1), "* Năm sinh từ 1900")
       .max(
         new Date(new Date().getFullYear() - parseInt(constants.MIN_AGE), 1, 1),
-        `* Tuổi tối thiểu là ${constants.MIN_AGE}`,
+        `* Tuổi tối thiểu là ${constants.MIN_AGE}`
       ),
-    gender: Yup.boolean().required('* Giới tính của bạn'),
-    address: Yup.string()
-      .trim()
-      .max(100, '* Tối đa 100 ký tự'),
+    gender: Yup.boolean().required("* Giới tính của bạn"),
+    address: Yup.string().trim().max(100, "* Tối đa 100 ký tự"),
   });
 
-  // fn: update account
+  // : update account
   const handleUpdate = async (value) => {
     try {
       setIsSubmitting(true);
@@ -63,28 +64,27 @@ function UpdateAccountForm() {
       }
       const response = await userApi.putUpdateUser(_id, value);
       if (response) {
-        message.success('Cập nhật thành công.');
+        message.success("Cập nhật thành công.");
         setIsSubmitting(false);
         setTimeout(() => {
           dispatch(userReducers.getUserRequest());
         }, 500);
       }
     } catch (error) {
-      message.error('Cập nhật thất bại. Thử lại', 2);
+      message.error("Cập nhật thất bại. Thử lại", 2);
       setIsSubmitting(false);
     }
   };
 
-  //rendering...
   return (
     <>
       {email && (
         <Formik
           initialValues={initialValue}
           validationSchema={validationSchema}
-          onSubmit={(value) => handleUpdate(value)}>
+          onSubmit={(value) => handleUpdate(value)}
+        >
           {(formikProps) => {
-            const suffixColor = 'rgba(0, 0, 0, 0.25)';
             return (
               <Form className="box-sha-home bg-white bor-rad-8">
                 <Row className=" p-16" gutter={[32, 32]} style={{ margin: 0 }}>
@@ -160,14 +160,15 @@ function UpdateAccountForm() {
                     />
                   </Col>
                   {/* Button submit */}
-                  <Col className="p-tb-16 t-left" span={24}>
+                  <Col className="p-tb-16 t-right" span={24}>
                     <Button
                       className="w-30"
                       size="large"
                       type="primary"
                       loading={isSubmitting}
-                      htmlType="submit">
-                      {isSubmitting ? 'Đang cập nhật ...' : 'Cập nhật'}
+                      htmlType="submit"
+                    >
+                      {isSubmitting ? "Đang cập nhật ..." : "Cập nhật"}
                     </Button>
                   </Col>
                 </Row>

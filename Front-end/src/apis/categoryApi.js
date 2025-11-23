@@ -1,4 +1,4 @@
-import axiosClient from "./axiosClient";
+import axiosClient from "./axiosClient-firt";
 
 const ADMIN_API_ENDPOINT = "/category";
 

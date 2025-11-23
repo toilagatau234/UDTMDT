@@ -18,62 +18,63 @@ import AddressUserList from './UserAddressList';
 function AccountPage() {
   const { pathname } = useLocation();
   const user = useSelector((state) => state.user);
-  const isAuth = useSelector((state) => state.authenticate.isAuth);
+  const { isAuth } = useSelector((state) => state.authenticate);
   const [activeKey, setActiveKey] = useState(() =>
-    pathname.replace(`${constants.ROUTES.ACCOUNT}/`, ''),
+    pathname.replace(`${constants.ROUTES.ACCOUNT}/`, "")
   );
+
   // menu list
   const menu = [
     {
-      Icon: <UserOutlined className="icon m-r-12 font-size-24px" />,
-      title: 'Thông tin tài khoản',
-      key: '',
+      icon: <UserOutlined className="icon m-r-12 font-size-24px" />,
+      title: "Thông tin tài khoản",
+      key: "",
     },
     {
-      Icon: <ReconciliationOutlined className="icon m-r-12 font-size-24px" />,
-      title: 'Quản lý đơn hàng',
-      key: 'orders',
+      icon: <ReconciliationOutlined className="icon m-r-12 font-size-24px" />,
+      title: "Quản lý đơn hàng",
+      key: "orders",
     },
     {
-      Icon: <CompassOutlined className="icon m-r-12 font-size-24px" />,
-      title: 'Địa chỉ giao hàng',
-      key: 'addresses',
+      icon: <CompassOutlined className="icon m-r-12 font-size-24px" />,
+      title: "Địa chỉ giao hàng",
+      key: "addresses",
     },
     {
-      Icon: <NotificationOutlined className="icon m-r-12 font-size-24px" />,
-      title: 'Thông báo',
-      key: 'notifications',
+      icon: <NotificationOutlined className="icon m-r-12 font-size-24px" />,
+      title: "Thông báo",
+      key: "notifications",
     },
   ];
 
   // render component with key
-  function renderComponent(key = '') {
+  const renderWithKey = (key = "") => {
     switch (key) {
-      case '':
+      case "":
         return (
           <>
-            <h2 className="m-b-16">Thông tin tài khoản</h2>
+            <h2 className="m-b-16 underline-title">Thông tin tài khoản</h2>
             <UpdateAccountForm />
           </>
         );
-      case 'orders':
+      case "orders":
         return (
           <>
-            <h2 className="m-b-16">Các đơn hàng của bạn</h2>
+            <h2 className="m-b-16 underline-title">Các đơn hàng </h2>
             <OrderList />
           </>
         );
-      case 'addresses':
+      case "addresses":
         return (
           <>
-            <h2 className="m-b-16">Danh sách địa chỉ giao hàng của bạn</h2>
-            <AddressUserList />
+            <h2 className="m-b-16 underline-title">Danh sách địa chỉ giao hàng </h2>
+            <UserAddressList />
           </>
         );
-      case 'notifications':
+      case "notifications":
         return (
           <>
-            <h2 className="m-b-16">Thông báo</h2>
+            <h2 className="m-b-16 underline-title">Thông báo</h2>
             <Result
               icon={<NotificationOutlined />}
               title="Hiện tại, không có thông báo nào"
@@ -87,19 +88,18 @@ function AccountPage() {
           <UpdateAccountForm />
         </>;
     }
-  }
+  };
 
-  // event: lấy lại key khi bấm vào đơn hàng menu
+  // : lấy lại key khi bấm vào đơn hàng menu
   useEffect(() => {
     if (pathname === `${constants.ROUTES.ACCOUNT}/orders`)
-      setActiveKey('orders');
+      setActiveKey("orders");
   }, [pathname]);
 
-  // rendering ...
   return (
     <>
       {!isAuth ? (
-        <div style={{ minHeight: '82vh' }}>
+        <div style={{ minHeight: "82vh" }}>
           <Result
             title="Đăng nhập để xem thông tin"
             extra={[
@@ -114,30 +114,36 @@ function AccountPage() {
         </div>
       ) : (
         <Row className="account-page container m-tb-32">
-          <Col className="p-r-16" span={24} md={6}>
+          <Col span={24} md={6} className="p-r-16">
             {/* giới thiệu */}
-            <div className="d-flex p-b-4 m-b-12 intro">
-              <img src={userLogo} width={32} height={32} className="m-r-12" />
-              <div>
-                <span className="m-b-0 font-size-16px">Tài khoản của</span>
-                <h3>
-                  <b className="name">{user.fullName}</b>
-                </h3>
+            <div className="intro d-flex p-b-4 m-b-12 ">
+              <img
+                src={userLogo}
+                alt="userlogo"
+                width={32}
+                height={32}
+                className="m-r-12"
+              />
+              <div className="d-flex align-items-center">
+                <span className="font-size-16px m-r-6 ">Tài khoản của</span>
+                <h3 className="name">{user.fullName}</h3>
               </div>
             </div>
 
             {/* menu */}
-            <ul className="account-page-menu m-t-12">
+            <ul className="account-page menu m-t-12">
               {menu.map((item, index) => (
                 <Link
+                  to={constants.ROUTES.ACCOUNT + "/" + item.key}
                   key={index}
-                  to={constants.ROUTES.ACCOUNT + '/' + item.key}>
+                >
                   <li
                     className={`account-page-menu-item p-b-20 ${
-                      item.key === activeKey ? 'active' : ''
+                      item.key === activeKey ? "active" : ""
                     }`}
-                    onClick={() => setActiveKey(item.key)}>
-                    {item.Icon}
+                    onClick={() => setActiveKey(item.key)}
+                  >
+                    {item.icon}
                     <span className="font-size-16px">{item.title}</span>
                   </li>
                 </Link>
@@ -146,7 +152,7 @@ function AccountPage() {
           </Col>
 
           <Col className="p-lr-8" span={24} md={18}>
-            {renderComponent(activeKey)}
+            {renderWithKey(activeKey)}
           </Col>
         </Row>
       )}

@@ -21,7 +21,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link, Navigate } from 'react-router-dom';
 import cartReducers from 'reducers/carts';
 
-// fn: Lấy địa chỉ giao hàng của user theo index
+// : Lấy địa chỉ giao hàng của user theo index
 const getUserDeliveryAdd = async (userId, index = 0) => {
   try {
     const response = await addressApi.getDeliveryAddressList(userId, 1);
@@ -37,28 +37,27 @@ const getUserDeliveryAdd = async (userId, index = 0) => {
 function PaymentPage() {
   const dispatch = useDispatch();
   const isAuth = useSelector((state) => state.authenticate.isAuth);
-
-  // ghi chú đơn hàng
-  const note = useRef('');
-  const addressIndex = useRef(-1);
-  const [transport, setTransport] = useState(0);
   const carts = useSelector((state) => state.carts);
   const user = useSelector((state) => state.user);
+
+  const note = useRef("");
+  const addressIndex = useRef(-1);
+  const [transport, setTransport] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isOrderSuccess, setIsOrderSuccess] = useState(false);
+
   // giá tạm tính
   const tempPrice = carts.reduce(
-    (a, b) => a + (b.price + (b.price * b.discount) / 100) * b.amount,
-    0,
+    (a, b) => a + (b.price - (b.price * b.discount) / 100) * b.amount,
+    0
   );
-  const transportFee =
-    tempPrice >= 1000000
-      ? 0
-      : constants.TRANSPORT_METHOD_OPTIONS.find(
-          (item) => item.value === transport,
-        ).price;
-  // fn: hiển thị danh sách đơn hàng
-  // Note: Chưa kiểm tra tình trạng thật của sản phẩm trong db !
+
+  // phi vận chuyển: <1000000 =0
+  const transportFee = constants.TRANSPORT_METHOD_OPTIONS.find(
+    (item) => item.value === transport
+  ).price;
+
+  // : hiển thị danh sách đơn hàng
   const showOrderInfo = (carts) => {
     return carts.map((item, index) => (
       <Card key={index}>
@@ -96,13 +95,13 @@ function PaymentPage() {
     ));
   };
 
-  // event: đặt hàng
+  // : đặt hàng
   const onCheckout = async () => {
     try {
       setIsLoading(true);
       const owner = user._id;
       if (addressIndex.current === -1) {
-        message.warn('Vui lòng chọn địa chỉ giao hàng');
+        message.warn("Vui lòng chọn địa chỉ giao hàng");
         setIsLoading(false);
         return;
       }
@@ -112,13 +111,13 @@ function PaymentPage() {
         transportMethod = transport;
       const orderDate = new Date();
       const productList = carts.map((item, index) => {
-        const { amount, name, price, discount, _id } = item;
+        const { amount, code, name, price, discount, _id } = item;
         return {
           numOfProd: amount,
-          orderProd: { name, price, discount, id: _id },
+          orderProd: {code, name, price, discount, id: _id },
         };
       });
-      const response = await orderApi.postCreateOrder({
+      const response = await orderApi.postCreateOrder2({
         owner,
         deliveryAdd,
         paymentMethod,
@@ -131,100 +130,41 @@ function PaymentPage() {
       });
       if (response && response.status === 200) {
         setTimeout(() => {
-          message.success('Đặt hàng thành công', 2);
+          message.success("Đặt hàng thành công", 2);
           setIsLoading(false);
           setIsOrderSuccess(true);
-          dispatch(cartReducers.resetCart());
+          dispatch(cartReducer.resetCart());
         }, 1000);
       }
     } catch (error) {
-      message.error('Đặt hàng thất bại, thử lại', 3);
+      message.error("Đặt hàng thất bại, thử lại", 3);
       setIsLoading(false);
     }
   };
 
-  // event: Đặt hàng với VNPay
-const onCheckoutWithVNPay = async () => {
-  try {
-    setIsLoading(true);
-    const owner = user._id;
-    if (addressIndex.current === -1) {
-      message.warn('Vui lòng chọn địa chỉ giao hàng');
-      setIsLoading(false);
-      return;
-    }
-    const deliveryAdd = await getUserDeliveryAdd(owner, addressIndex.current);
-    // Tạo đơn hàng trên server (với paymentMethod = 1) 
-    const orderDate = new Date();
-    const productList = carts.map((item) => {
-      const { amount, name, price, discount, _id } = item;
-      return {
-        numOfProd: amount,
-        orderProd: { name, price, discount, id: _id },
-      };
-    });
-
-    const orderResponse = await orderApi.postCreateOrder({
-      owner,
-      deliveryAdd,
-      paymentMethod: 1, // 1 = VNPay
-      orderStatus: 0,
-      transportMethod: transport,
-      transportFee,
-      orderDate,
-      productList,
-      note: note.current,
-    });
-
-    // Nhận orderId và amount, gọi API tạo URL VNPay 
-    if (orderResponse && orderResponse.status === 200) {
-      const { orderId, amount } = orderResponse.data;
-      const vnpayData = {
-        amount: amount,
-        orderId: orderId,
-        bankCode: 'VNBANK',
-        language: 'vn',
-      };
-
-      const vnpayResponse = await vnpayApi.createPaymentUrl(vnpayData);
-
-      // Chuyển hướng người dùng đến VNPay 
-      if (vnpayResponse && vnpayResponse.status === 200) {
-        // Xóa giỏ hàng sau khi đã tạo đơn thành công
-        dispatch(cartReducers.resetCart());
-        // Chuyển hướng
-        window.location.href = vnpayResponse.data.paymentUrl;
-      } else {
-        message.error('Tạo thanh toán VNPay thất bại');
-        setIsLoading(false);
-      }
-    }
-  } catch (error) {
-    message.error('Đặt hàng thất bại, thử lại', 3);
-    setIsLoading(false);
+  const vnpayCheckout = async() => {
+    const response = await vnpayApi.vnpayCheckout()
   }
-};
 
-  // rendering ...
   return (
     <>
       {carts.length <= 0 && !isOrderSuccess && (
-        <Navigate to={constants.ROUTES.CART} replace/>
+        <Redirect to={constants.ROUTES.CART} />
       )}
       {isAuth ? (
-        <div className="m-tb-32 container">
+        <div className="container m-tb-32" style={{ minHeight: "100vh" }}>
           {isOrderSuccess ? (
             <Result
               status="success"
               title="Đơn hàng của bạn đã đặt thành công."
-              subTitle="Xem chi tiết đơn hàng vừa rồi"
+              subTitle="Xem chi tiết đơn hàng vừa rồi, thông báo xác nhận đợn hàng đã được tởi gmail của Anh/chị"
               extra={[
                 <Button type="default" key="0">
-                  <Link to={constants.ROUTES.ACCOUNT + '/orders'}>
+                  <Link to={constants.ROUTES.ACCOUNT + "/orders"}>
                     Xem chi tiết đơn hàng
                   </Link>
                 </Button>,
-                <Button key="1" type="primary">
+                <Button type="primary" key="1">
                   <Link to="/">Tiếp tục mua sắm</Link>
                 </Button>,
               ]}
@@ -235,16 +175,20 @@ const onCheckoutWithVNPay = async () => {
               <Col span={24} className="d-flex page-position">
                 <Link to="/">
                   <HomeOutlined
-                    className="p-12 icon-home font-size-16px bg-white"
+                    className="p-12 icom-home font-size-16px bg-white"
                     style={{ borderRadius: 50 }}
                   />
                 </Link>
                 <span
                   className="p-lr-8 font-weight-500"
-                  style={{ lineHeight: '40px' }}>{`>`}</span>
+                  style={{ lineHeight: "40px" }}
+                >
+                  {`>`}
+                </span>
                 <span
                   className="p-8 font-weight-500 bg-white"
-                  style={{ borderRadius: 50 }}>
+                  style={{ borderRadius: 50 }}
+                >
                   Tiến hành thanh toán
                 </span>
               </Col>
@@ -256,15 +200,16 @@ const onCheckoutWithVNPay = async () => {
                   <h2>Thông tin giao hàng</h2>
                   <Radio.Group
                     defaultValue={transport}
-                    onChange={(v) => setTransport(v.target.value)}
-                    className="m-tb-8">
+                    onChange={(e) => setTransport(e.target.value)}
+                    className="m-tb-8"
+                  >
                     {constants.TRANSPORT_METHOD_OPTIONS.map((item, index) => (
                       <Radio key={index} value={item.value}>
                         {item.label}
                       </Radio>
                     ))}
                   </Radio.Group>
-                  <AddressUserList
+                  <UserAddressList
                     isCheckout={true}
                     onChecked={(value) => (addressIndex.current = value)}
                   />
@@ -274,7 +219,7 @@ const onCheckoutWithVNPay = async () => {
                 <div className="p-12 bg-white bor-rad-8">
                   <h2 className="m-b-8">Ghi chú cho đơn hàng</h2>
                   <Input.TextArea
-                    placeholder="Nhập thông tin ghi chú nhà bán"
+                    placeholder="Nhập thông tin cần ghi chú "
                     maxLength={200}
                     showCount
                     allowClear
@@ -283,12 +228,12 @@ const onCheckoutWithVNPay = async () => {
                 </div>
 
                 {/* phương thức thanh toán */}
-                <div className="p-12 bg-white bor-rad-8 m-tb-16">
+                <div className="p-12 bgPlate bor-rad-8 m-tb-16">
                   <h2 className="m-b-8">Phương thức thanh toán</h2>
                   <p>Thông tin thanh toán của bạn sẽ luôn được bảo mật</p>
                   <Row gutter={[16, 16]}>
                     <Col span={24} md={12}>
-                      <div className="p-tb-8 p-lr-16 bg-gray item-active">
+                      <div className="bg-gray item-active p-tb-8 p-lr-16">
                         <b className="font-size-16px">
                           Thanh toán khi nhận hàng
                         </b>
@@ -298,12 +243,18 @@ const onCheckoutWithVNPay = async () => {
                         </p>
                       </div>
                     </Col>
-                    <Col span={24} md={12}>
-                      <div
-                        className="p-tb-8 p-lr-16 bg-gray"
-                        onClick={onCheckoutWithVNPay}
-                        style={{ cursor: 'pointer' }}
-                      >
+                    <Col
+                      span={24} md={12}
+                      onClick={() =>
+                        message.warn(
+                          "Tính năng đang được cập nhật. Rất xin lỗi quý khách vì sự bất tiện này",
+                          3
+                        )
+                      }
+
+                      // onClick={vnpayCheckout}
+                    >
+                      <div className="bg-gray p-tb-8 p-lr-16">
                         <b className="font-size-16px">
                           Thanh toán Online qua cổng VNPAY
                         </b>
@@ -319,8 +270,8 @@ const onCheckoutWithVNPay = async () => {
 
               {/* đặt hàng */}
               <Col span={24} md={8}>
-                {/* thồng tin đơn hàng */}
-                <div className="p-12 bg-white bor-rad-8 m-tb-16">
+                {/* thông tin đơn hàng */}
+                <div className="bg-white p-12 bor-rad-8 m-tb-16">
                   <div className="d-flex justify-content-between">
                     <h2>Thông tin đơn hàng</h2>
                     <Button type="link" size="large">
@@ -342,8 +293,9 @@ const onCheckoutWithVNPay = async () => {
                   <div className="t-center p-b-16">
                     <span
                       style={{
-                        color: '#ff5000',
-                      }}>{`(Xin vui lòng kiểm tra lại đơn hàng trước khi đặt mua)`}</span>
+                        color: "#ff5000",
+                      }}
+                    >{`(Xin vui lòng kiểm tra lại đơn hàng trước khi đặt mua)`}</span>
                   </div>
                 </div>
               </Col>
@@ -351,7 +303,7 @@ const onCheckoutWithVNPay = async () => {
           )}
         </div>
       ) : (
-        <Navigate to={constants.ROUTES.LOGIN} replace/>
+        <Redirect to={constants.ROUTES.LOGIN} />
       )}
     </>
   );

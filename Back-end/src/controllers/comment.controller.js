@@ -6,7 +6,7 @@ const getCommentList = async (req, res, next) => {
   try {
     const { id } = req.query;
     const data = await CommentModel.find({ productId: id }).select(
-      '-productId -_id',
+      '-productId',
     );
     if (data) return res.status(200).json(data);
   } catch (error) {

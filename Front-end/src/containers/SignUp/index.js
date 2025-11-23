@@ -24,10 +24,10 @@ function SignUp() {
   // fn: trạng thái gửi mã xác thực
   const [isSending, setIsSending] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isNavigateLogin, setIsNavigateLogin] = useState(false);
+  const [isRedirectLogin, setIsRedirectLogin] = useState(false);
 
   // ref kiểm tra đã nhập email hay chưa, hỗ trợ việc gửi mã xác nhận
-  const emailRef = useRef('');
+  const emailRef = useRef("");
 
   // fn: gửi mã xác nhận
   const onSendCode = async () => {
@@ -37,7 +37,7 @@ function SignUp() {
       const regex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
 
       if (!regex.test(email)) {
-        message.error('Email không hợp lệ !');
+        message.error("Email không hợp lệ !");
         return;
       }
       // set loading, tránh việc gửi liên tục
@@ -46,7 +46,7 @@ function SignUp() {
       // tiến hành gửi mã
       const result = await accountApi.postSendVerifyCode({ email });
       if (result.status === 200) {
-        message.success('Gửi thành công, kiểm tra email');
+        message.success("Gửi thành công, kiểm tra email");
         setIsSending(false);
       }
     } catch (error) {
@@ -54,7 +54,7 @@ function SignUp() {
       if (error.response) {
         message.error(error.response.data.message);
       } else {
-        message.error('Gửi thất bại, thử lại');
+        message.error("Gửi thất bại, thử lại");
       }
     }
   };
@@ -65,28 +65,28 @@ function SignUp() {
       setIsSubmitting(true);
       const result = await accountApi.postSignUp({ account });
       if (result.status === 200) {
-        message.success('Đăng ký thành công.', 1);
+        message.success("Đăng ký thành công.", 1);
         setIsSubmitting(false);
-        setIsNavigateLogin(true);
+        setIsRedirectLogin(true);
       }
     } catch (error) {
       setIsSubmitting(false);
       if (error.response) {
         message.error(error.response.data.message);
       } else {
-        message.error('Đăng ký thất bại, thử lại');
+        message.error("Đăng ký thất bại, thử lại");
       }
     }
   };
 
   // giá trọ khởi tạo cho formik
   const initialValue = {
-    email: '',
-    verifyCode: '',
-    password: '',
-    confirmPassword: '',
-    fullName: '',
-    address: '',
+    email: "",
+    verifyCode: "",
+    password: "",
+    confirmPassword: "",
+    fullName: "",
+    address: "",
     gender: null,
   };
 
@@ -94,56 +94,54 @@ function SignUp() {
   const validationSchema = Yup.object().shape({
     email: Yup.string()
       .trim()
-      .required('* Email bạn là gì ?')
-      .email('* Email không hợp lệ !'),
+      .required("* Email bạn là gì ?")
+      .email("* Email không hợp lệ !"),
     fullName: Yup.string()
       .trim()
-      .required('* Tên bạn là gì ?')
+      .required("* Tên bạn là gì ?")
       .matches(
         /[^~!@#%\^&\*()_\+-=\|\\,\.\/\[\]{}'"`]/,
-        '* Không được chứa ký tự đặc biệt',
+        "* Không được chứa ký tự đặc biệt"
       )
-      .max(70, '* Tối đa 70 ký tự'),
+      .max(70, "* Tối đa 70 ký tự"),
     verifyCode: Yup.string()
       .trim()
-      .required('* Nhập mã xác nhận')
+      .required("* Nhập mã xác nhận")
       .length(
         constants.MAX_VERIFY_CODE,
-        `* Mã xác nhận có ${constants.MAX_VERIFY_CODE} ký tự`,
+        `* Mã xác nhận có ${constants.MAX_VERIFY_CODE} ký tự`
       ),
     password: Yup.string()
       .trim()
-      .required('* Mật khẩu của bạn là gì ?')
-      .min(6, '* Mật khẩu ít nhất 6 ký tự')
-      .max(20, '* Mật khẩu tối đa 20 ký tự')
+      .required("* Mật khẩu của bạn là gì ?")
+      .min(6, "* Mật khẩu ít nhất 6 ký tự")
+      .max(20, "* Mật khẩu tối đa 20 ký tự")
       .matches(
         /^(?=.*[A-Z])(?=.*[~!@#%\^&\*()_\+-=\|\\,\.\/\[\]{}'"`])(?=.*[0-9])(?=.*[a-z]).{6,}$/,
-        'Mật khẩu chứa chữ Hoa,chữ thường, số và ký tự đặc biệt',
+        "Mật khẩu chứa chữ Hoa,chữ thường, số"
       ),
     confirmPassword: Yup.string().oneOf(
-      [Yup.ref('password'), null],
-      '* Mật khẩu chưa trùng khớp',
+      [Yup.ref("password"), null],
+      "* Mật khẩu chưa trùng khớp"
     ),
     birthday: Yup.date()
       .notRequired()
-      .min(new Date(1900, 1, 1), '* Năm sinh từ 1900')
+      .min(new Date(1900, 1, 1), "* Năm sinh từ 1900")
       .max(
         new Date(new Date().getFullYear() - parseInt(constants.MIN_AGE), 1, 1),
-        `* Tuổi tối thiểu là ${constants.MIN_AGE}`,
+        `* Tuổi tối thiểu là ${constants.MIN_AGE}`
       ),
-    gender: Yup.boolean().required('* Giới tính của bạn'),
-    address: Yup.string()
-      .trim()
-      .max(100, '* Tối đa 100 ký tự'),
+    gender: Yup.boolean().required("* Giới tính của bạn"),
+    address: Yup.string().trim().max(100, "* Tối đa 100 ký tự"),
   });
 
   // return...
   return (
     <div className="SignUp container">
       {/*// Note: chuyển đến trang login khi đăng ký thành công */}
-      {isNavigateLogin && (
+      {isRedirectLogin && (
         <Delay wait={constants.DELAY_TIME}>
-          <Navigate to={constants.ROUTES.LOGIN} replace/>
+          <Redirect to={constants.ROUTES.LOGIN} />
         </Delay>
       )}
 
@@ -153,20 +151,22 @@ function SignUp() {
       <Formik
         initialValues={initialValue}
         validationSchema={validationSchema}
-        onSubmit={onSignUp}>
+        onSubmit={onSignUp}
+      >
         {(formikProps) => {
           emailRef.current = formikProps.values.email;
-          const suffixColor = 'rgba(0, 0, 0, 0.25)';
+          const suffixColor = "rgba(0, 0, 0, 0.25)";
           return (
             <Form className="bg-form">
               <Row
                 className="input-border"
                 gutter={[64, 32]}
-                style={{ margin: 0 }}>
+                style={{ marginLeft: 0, marginRight: 0 }}
+              >
                 {/* Form thông tin đăng ký */}
                 <Col className="p-b-0" span={24} md={12}>
                   <Row gutter={[0, 16]}>
-                    <h2>Thông tin tài khoản</h2>
+                    <h2 className="m-t-12">Thông tin tài khoản</h2>
                     <Col span={24}>
                       {/* email field */}
                       <FastField
@@ -209,7 +209,8 @@ function SignUp() {
                         type="primary"
                         size="large"
                         onClick={onSendCode}
-                        loading={isSending}>
+                        loading={isSending}
+                      >
                         Gửi mã
                       </Button>
                     </Col>
@@ -248,7 +249,7 @@ function SignUp() {
                 {/* Form thông tin chi tiết */}
                 <Col className="p-b-0" span={24} md={12}>
                   <Row gutter={[0, 16]}>
-                    <h2>Thông tin chi tiết</h2>
+                    <h2 className="m-t-12">Thông tin chi tiết</h2>
                     <Col span={24}>
                       {/* full name filed */}
                       <FastField
@@ -314,20 +315,21 @@ function SignUp() {
                     size="large"
                     type="primary"
                     htmlType="submit"
-                    loading={isSubmitting}>
+                    loading={isSubmitting}
+                  >
                     Đăng Ký
                   </Button>
                 </Col>
 
                 <Col span={24} className="p-t-0 t-center">
-                  <div className="or-option" style={{ color: '#acacac' }}>
+                  <div className="or-option" style={{ color: "#acacac" }}>
                     HOẶC
                   </div>
                   <LoginGoogle
                     className="login-gg m-0-auto"
-                    title={windowWidth > 375 ? 'Đăng nhập với Gmail' : 'Gmail'}
+                    title={windowWidth > 375 ? "Đăng nhập với Gmail" : "Gmail"}
                   />
-                  <div className="m-t-10 font-weight-500">
+                  <div className="m-t-20 m-b-20 font-weight-500">
                     Bạn đã có tài khoản ?
                     <Link to={constants.ROUTES.LOGIN}>&nbsp;Đăng nhập</Link>
                   </div>

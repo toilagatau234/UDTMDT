@@ -12,50 +12,49 @@ function AddressAddForm(props) {
   const [districtList, setDistrictList] = useState([]);
   const [wardList, setWardList] = useState([]);
   const [streetList, setStreetList] = useState([]);
-  const provinceId = useRef('');
+  const provinceId = useRef("");
   const formRef = useRef(null);
   const user = useSelector((state) => state.user);
 
-  // fn: lấy danh sách tỉnh thành
+  // : lấy danh sách tỉnh thành
   useEffect(() => {
     let isSubscribe = true;
+
     async function getProvinceList() {
       try {
         const response = await addressApi.getProvince();
-        if (response && isSubscribe) {
-          setProvinceList(response.data || []);
+        if (response) {
+          if (isSubscribe) setProvinceList(response.data);
         }
-      } catch (error) {
-        // message.error('Lấy danh sách tỉnh thành thất bại.');
-      }
+      } catch (error) {}
     }
     getProvinceList();
+
     return () => (isSubscribe = false);
   }, []);
 
-  // fn: lấy danh sách huyện/xã khi đã chọn tỉnh/thành
+  // : lấy danh sách huyện/xã khi đã chọn tỉnh/thành
   const getDistrictList = async (provinceId = 0) => {
     try {
       const response = await addressApi.getDistrict(provinceId);
       if (response) {
-        setDistrictList(response.data || []);
+        setDistrictList(response.data);
       }
     } catch (error) {
       throw error;
     }
   };
 
-  // fn: lấy danh sách huyện/xã khi đã chọn tỉnh/thành
+  // : lấy danh sách huyện/xã khi đã chọn tỉnh/thành
   const getWardStreetList = async (provinceId = 0, districtId) => {
     try {
       const response = await addressApi.getWardStreetList(
         provinceId,
-        districtId,
+        districtId
       );
       if (response) {
-        // SỬA LỖI: Thêm || [] để tránh null/undefined gây lỗi map
-        setStreetList(response.data.streets || []);
-        setWardList(response.data.wards || []);
+        setStreetList(response.data.streets);
+        setWardList(response.data.wards);
       }
     } catch (error) {
       throw error;
@@ -70,15 +69,15 @@ function AddressAddForm(props) {
       const userId = user._id;
       const response = await addressApi.postAddDeliveryAddress(
         userId,
-        sentData,
+        sentData
       );
       if (response && response.status === 200) {
-        message.success('Thêm địa chỉ thành công', 2);
+        message.success("Thêm địa chỉ thành công", 2);
       }
     } catch (error) {
       if (error) {
         if (error.response) message.error(error.response.data.message, 2);
-        else message.error('Thêm địa chỉ thất bại', 2);
+        else message.error("Thêm địa chỉ thất bại", 2);
       }
     }
     setIsVisible(false);
@@ -103,39 +102,52 @@ function AddressAddForm(props) {
           onClick={() => {
             setIsVisible(false);
             onCloseForm();
-          }}>
-          Huỷ bỏ
+          }}
+        >
+          Hủy bỏ
         </Button>,
         <Button key="submit" type="primary" htmlType="submit" form="form">
           Thêm địa chỉ
         </Button>,
-      ]}>
-      <Form onFinish={onAddAddress} ref={formRef} name="form">
+      ]}
+    >
+      <Form name="form" onFinish={onAddAddress} ref={formRef}>
         <Row gutter={[32, 0]}>
           <Col span={12}>
-            <h3>Thông tin người nhận hàng</h3>
+            <h3>Thông tin nhận hàng</h3>
             <Form.Item
               name="name"
-              className="m-tb-16"
+              className="m-tb-12"
               rules={[
-                { required: true, message: '* Bắt buộc nhập' },
-                { max: 40, message: 'Tối đa 40 ký tự' },
-              ]}>
-              <Input size="middle" placeholder="Họ tên *" maxLength={60} />
+                { required: true, message: "Bắt buộc nhập *" },
+                {
+                  max: 40,
+                  message: "Tối đa 40 ký tự",
+                },
+              ]}
+            >
+              <Input size="middle" placeholder="Họ Tên *" maxLength={60} />
             </Form.Item>
             <Form.Item
               name="phone"
               rules={[
-                { required: true, message: '* Bắt buộc nhập' },
+                { required: true, message: "Bắt buộc nhập *" },
                 {
                   validator: (_, value) =>
                     /0\d{0,9}/gi.test(value)
                       ? Promise.resolve()
-                      : Promise.reject('Số điện thoại không hợp lệ'),
+                      : Promise.reject("Số điện thoại không hợp lệ"),
                 },
-                { max: 10, message: 'Số điện thoại bao gồm 10 số' },
-                { min: 10, message: 'Số điện thoại bao gồm 10 số' },
-              ]}>
+                {
+                  max: 10,
+                  message: "Số điện thoại bao gồm 10 số",
+                },
+                {
+                  min: 10,
+                  message: "Số điện thoại bao gồm 10 số",
+                },
+              ]}
+            >
               <Input
                 size="middle"
                 placeholder="Số điện thoại *"
@@ -148,44 +160,54 @@ function AddressAddForm(props) {
             {/* tỉnh thành */}
             <Form.Item
               name="province"
-              rules={[{ required: true, message: '* bắt buộc nhập' }]}>
+              rules={[{ required: true, message: "Bắt buộc nhập *" }]}
+            >
               <Select
                 filterOption={(input, option) =>
-                  option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                  option.children.toLowerCase().indexOf(input.toLowerCase()) >=
+                  0
                 }
                 showSearch
                 onChange={(value) => {
                   getDistrictList(value);
                   provinceId.current = value;
-                  formRef.current.resetFields(['district', 'wards', 'street']);
+                  formRef.current.resetFields(["district", "wards", "street"]);
                 }}
                 placeholder="Tỉnh/thành"
-                className="m-tb-16"
-                size="middle">
-                {/* SỬA LỖI: Thêm optional chaining ?. */}
-                {provinceList?.map((item, index) => (
+                className="m-tb-12"
+                size="middle"
+              >
+                {provinceList.map((item, index) => (
                   <Option value={item.id} key={index}>
                     {item.name}
                   </Option>
                 ))}
+                {/* {provinceList.map((item, index) => (
+                  <Option value={item.ID} key={index}>
+                     {item.Title}
+                  </Option>
+                ))} */}
               </Select>
             </Form.Item>
             {/* huyễn/ quận */}
             <Form.Item
               name="district"
-              rules={[{ required: true, message: '* bắt buộc nhập' }]}>
+              rules={[{ required: true, message: "Bắt buộc nhập *" }]}
+            >
               <Select
                 filterOption={(input, option) =>
-                  option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                  option.children.toLowerCase().indexOf(input.toLowerCase()) >=
+                  0
                 }
                 showSearch
                 onChange={(value) =>
                   getWardStreetList(provinceId.current, value)
                 }
                 placeholder="Huyện/Quận"
-                size="middle">
-                {/* SỬA LỖI: Thêm optional chaining ?. */}
-                {districtList?.map((item, index) => (
+                size="middle"
+                className="m-tb-12"
+              >
+                {districtList.map((item, index) => (
                   <Option value={item.id} key={index}>
                     {item.name}
                   </Option>
@@ -195,19 +217,24 @@ function AddressAddForm(props) {
             {/* phường, xã */}
             <Form.Item
               name="wards"
-              rules={[{ required: true, message: '* bắt buộc nhập' }]}>
+              rules={[{ required: true, message: "Bắt buộc nhập *" }]}
+            >
               <Select
                 filterOption={(input, option) =>
-                  option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+                  option.children.toLowerCase().indexOf(input.toLowerCase()) >=
+                  0
                 }
-                className="m-tb-16"
                 showSearch
+                onChange={(value) =>
+                  getWardStreetList(provinceId.current, value)
+                }
+                className="m-tb-12"
                 placeholder="Phường/Xã"
-                size="middle">
-                 {/* SỬA LỖI: Thêm optional chaining ?. */}
-                {wardList?.map((item, index) => (
+                size="middle"
+              >
+                {wardList.map((item, index) => (
                   <Option value={item.id} key={index}>
-                    {item.prefix + ' ' + item.name}
+                    {item.prefix + " " + item.name}
                   </Option>
                 ))}
               </Select>
@@ -215,19 +242,35 @@ function AddressAddForm(props) {
             {/* đường */}
             <Form.Item
               name="street"
-              rules={[{ required: true, message: '* Bắt buộc nhập tên đường' }]}>
-              <Input
-                placeholder="Nhập tên đường..."
+              rules={[{ required: true, message: "Bắt buộc nhập *" }]}
+            >
+              <Select
+                filterOption={(input, option) =>
+                  option.children.toLowerCase().indexOf(input.toLowerCase()) >=
+                  0
+                }
+                showSearch
+                onChange={(value) =>
+                  getWardStreetList(provinceId.current, value)
+                }
+                className="m-tb-12"
+                placeholder="Đường"
                 size="middle"
-                maxLength={100}
-              />
+              >
+                {streetList.map((item, index) => (
+                  <Option value={item.id} key={index}>
+                    {item.prefix + " " + item.name}
+                  </Option>
+                ))}
+              </Select>
             </Form.Item>
             {/* chi tiết */}
             <Form.Item
               name="details"
-              rules={[{ required: true, message: '* bắt buộc nhập' }]}>
+              rules={[{ required: true, message: "* bắt buộc nhập" }]}
+            >
               <Input
-                className="m-t-16"
+                className="m-t-12"
                 maxLength={100}
                 placeholder="Số nhà cụ thể"
                 size="middle"

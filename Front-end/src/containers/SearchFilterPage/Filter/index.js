@@ -8,8 +8,8 @@ import { useLocation } from 'react-router-dom';
 import ProductCarousel from '../ProductCarousel';
 import './index.scss';
 
-// fn: thêm option vào url
-function addOptionToUrl(url, key = '', value = '') {
+// : thêm option vào url
+const addOptionToUrl = (url, key = "", value = "") => {
   let result = url;
 
   let isChanged = false,
@@ -20,9 +20,9 @@ function addOptionToUrl(url, key = '', value = '') {
     let k = Object.keys(query)[0];
     if (k === key) {
       isMatch = true;
-      const valueList = query[k].split(';');
+      const valueList = query[k].split(";");
       if (valueList.indexOf(value) === -1) {
-        query[k] = query[k] + ';' + value;
+        query[k] = query[k] + ";" + value;
         isChanged = true;
       }
     }
@@ -35,7 +35,7 @@ function addOptionToUrl(url, key = '', value = '') {
 
   // join lại
   if (isChanged) {
-    result = '?';
+    result = "?";
     queryList.forEach((query) => {
       const k = Object.keys(query)[0];
       result += `${k}=${query[k]}&`;
@@ -43,10 +43,10 @@ function addOptionToUrl(url, key = '', value = '') {
     result = result.slice(0, result.length - 1);
   }
   return result;
-}
+};
 
-// fn: xoá option trong url
-function removeOptionToUrl(url, key = '', value = '') {
+// : xoá option trong url
+const removeOptionToUrl = (url, key = "", value = "") => {
   let result = url;
 
   let isChanged = false;
@@ -57,8 +57,8 @@ function removeOptionToUrl(url, key = '', value = '') {
     let k = Object.keys(query)[0];
     if (k === key) {
       query[k] = query[k].replace(
-        new RegExp(`(${value});?|;?(${value})`, 'gi'),
-        '',
+        new RegExp(`(${value});?|;?(${value})`, "gi"),
+        ""
       );
       isChanged = true;
     }
@@ -66,7 +66,7 @@ function removeOptionToUrl(url, key = '', value = '') {
 
   // join lại
   if (isChanged) {
-    result = '?';
+    result = "?";
     queryList.forEach((query) => {
       const k = Object.keys(query)[0];
       result += `${k}=${query[k]}&`;
@@ -74,10 +74,10 @@ function removeOptionToUrl(url, key = '', value = '') {
     result = result.slice(0, result.length - 1);
   }
   return result;
-}
+};
 
-//fn: phân tích mảng các câu query
-function analysisQueryList(queryList = []) {
+//: phân tích mảng các câu query
+const analysisQueryList = (queryList = []) => {
   const query = { pOption: new Object(), dOption: new Object() };
   queryList.forEach((item) => {
     const key = Object.keys(item)[0];
@@ -87,15 +87,14 @@ function analysisQueryList(queryList = []) {
       Object.assign(query.pOption, result);
     } else Object.assign(query.dOption, result);
   });
-  return query;
-}
 
-// fn: main
-function FilterResult() {
+  return query;
+};
+
+function Filter() {
   // get query param
   let s = decodeURI(useLocation().search);
 
-  // lưu state để thay đổi khi nhấn chọn các options mà không cần redirect
   const [url, setUrl] = useState(s);
 
   // phân tích url
@@ -103,24 +102,26 @@ function FilterResult() {
   const queryStrList = helpers.queryString(search);
   let type = 0;
   const queryList = queryStrList.filter((item) => {
-    //  type
-    if (Object.keys(item)[0] === 't') {
+    //type
+    if (Object.keys(item)[0] === "t") {
       if (isNaN(parseInt(item.t))) type = 0;
       else type = parseInt(item.t);
       return false;
     }
     return true;
   });
-  const { dOption, pOption } = analysisQueryList(queryList);
-  // state pagination
+
+  // pOption: product query option, dOption: detail query option
+  const { pOption, dOption } = analysisQueryList(queryList);
+  //State pagination
   const [list, setList] = useState([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const perPage = 12;
 
-  // fn: filter function
-  async function getFilterProducts(currentPage, isSubscribe) {
+  // thực hiện filter
+  const getFilterProducts = async (currentPage, isSubscribe) => {
     try {
       setIsLoading(true);
       const productList = await productApi.getFilterProducts(
@@ -128,7 +129,7 @@ function FilterResult() {
         pOption,
         dOption,
         currentPage,
-        perPage,
+        perPage
       );
       if (productList && isSubscribe) {
         const { count, list } = productList.data;
@@ -138,39 +139,38 @@ function FilterResult() {
       }
     } catch (error) {
       setTotal(0);
-      setIsLoading(false);
       setList([]);
+      setIsLoading(false);
     }
-  }
+  };
 
-  // event: Lấy dữ liệu tìm kiếm
+  // : Lấy dữ liệu tìm kiếm
   useEffect(() => {
     let isSubscribe = true;
     setIsLoading(true);
     if (page !== 1) setPage(1);
     getFilterProducts(1, isSubscribe);
 
-    // clean up
     return () => {
       isSubscribe = false;
     };
   }, [url]);
 
-  // event: Lấy dữ liệu tìm kiếm khi đổi trang
+  // : Lấy dữ liệu tìm kiếm khi đổi trang
   useEffect(() => {
     let isSubscribe = true;
     getFilterProducts(page, isSubscribe);
-    // clean up
+
     return () => {
       isSubscribe = false;
     };
   }, [page]);
 
-  //  Note: FILTER OPTION
+  //  : FILTER OPTION
   const [tagList, setTagList] = useState([]);
   const [activeList, setActiveList] = useState([]);
 
-  // event: Chọn 1 btn trong bộ lọc
+  // : Chọn 1 btn trong bộ lọc
   const onChecked = (sub, query, key) => {
     const { title, to } = sub;
     const index = activeList.findIndex((value) => value === key);
@@ -218,17 +218,18 @@ function FilterResult() {
   };
 
   // event: đóng tất cả các tag
-  const onCloseAll = () => {
+  const onCloseAllTag = () => {
     setActiveList([]);
     setTagList([]);
     setUrl(s);
   };
 
-  // fn: hiển thị bộ lọc
-  function renderFilterOption(type) {
+  // : hiển thị bộ lọc
+  const renderFilterOption = (type) => {
     if (type < 0) return;
-    const list = constants.FILTER_OPTION_LIST.find((item) => item.key === type)
-      .data;
+    const list = constants.FILTER_OPTION_LIST.find(
+      (item) => item.key === type
+    ).data;
     return (
       list &&
       list.map((item, index) => (
@@ -242,10 +243,11 @@ function FilterResult() {
                   key={key}
                   className={`bor-rad-4 m-r-8 ${
                     activeList.findIndex((value) => value === key) === -1
-                      ? ''
-                      : 'filter-active-btn'
+                      ? ""
+                      : "filter-active-btn"
                   }`}
-                  onClick={() => onChecked(sub, item.query, key)}>
+                  onClick={() => onChecked(sub, item.query, key)}
+                >
                   {sub.title}
                 </Button>
               );
@@ -254,10 +256,10 @@ function FilterResult() {
         </div>
       ))
     );
-  }
+  };
 
-  // fn: hiển thị tag đang chọn lọc
-  function showTagList() {
+  // : hiển thị tag đang chọn lọc
+  const showTagList = () => {
     return (
       tagList &&
       tagList.map((item, index) => (
@@ -266,30 +268,25 @@ function FilterResult() {
           key={index}
           closable={true}
           color={item.color}
-          onClose={() => onCloseTag(item.key, item.query, item.to)}>
+          onClose={() => onCloseTag(item.key, item.query, item.to)}
+        >
           {item.title}
         </Tag>
       ))
     );
-  }
-
-  // rendering...
+  };
   return (
-    <div className="container" style={{ minHeight: '100vh' }}>
-      {/* Carousel */}
-      <ProductCarousel />
-
+    <div className="container" style={{ minHeight: "100vh" }}>
       {/* Số  kết quả tìm kiếm */}
       {!isLoading && (
-        <h2 className="font-size-24px m-b-12">
-          Tìm được <b>{total}</b> sản phẩm
+        <h2 className="font-size-24px m-tb-12">
+          Tìm được <b>{total}</b> sản phẩm.
         </h2>
       )}
 
-      {/* loading */}
       {isLoading ? (
         <Spin
-          className="trans-center"
+          className="transform-center"
           tip="Đang tìm kiếm sản phẩm phù hợp ..."
           size="large"
         />
@@ -297,18 +294,19 @@ function FilterResult() {
         <>
           {/* Bộ lọc  */}
           <div className="Filter-Options p-tb-16 bg-white bor-rad-8 box-sha-home">
-            <div className="list-active p-lr-16 p-b-8 d-flex justify-content-between">
-              <b className="font-size-22px filter-list m-r-20">Bộ lọc</b>
+            <div className="list-active d-flex justify-content-between p-lr-16 p-b-8">
+              <b className="font-size-20px filter-list m-r-20">Bộ lọc</b>
               {tagList.length > 0 && (
                 <>
-                  <div className="d-flex align-i-center flex-wrap">
+                  <div className="d-flex align-items-center flex-wrap">
                     {showTagList()}
                   </div>
                   <Button
                     className="bor-rad-4"
                     type="dashed"
                     danger
-                    onClick={onCloseAll}>
+                    onClick={onCloseAllTag}
+                  >
                     <b>Xoá tất cả</b>
                   </Button>
                 </>
@@ -328,7 +326,7 @@ function FilterResult() {
               current={page}
               showSizeChanger={false}
               pageSize={perPage}
-              onChange={(p) => setPage(p)}
+              onChange={(e) => setPage(e)}
             />
           )}
         </>
@@ -337,4 +335,4 @@ function FilterResult() {
   );
 }
 
-export default FilterResult;
+export default Filter;

@@ -1,8 +1,8 @@
-const OrderModel = require('../models/order.model');
+const OrderModel = require("../models/order.model");
 const Order2Model = require("../models/order2.model");
 const OrderDetailModel = require("../models/orderDetails.model");
-const helpers = require('../helpers');
-const ProductModel = require('../models/product.models/product.model');
+const helpers = require("../helpers");
+const ProductModel = require("../models/product.models/product.model");
 const UserModel = require("../models/account.models/user.model");
 const mailConfig = require("../configs/mail.config");
 const AccountModel = require("../models/account.models/account.model");
@@ -12,7 +12,7 @@ const getOrderList = async (req, res, next) => {
   try {
     const { userId } = req.query;
     const orderList = await OrderModel.find({ owner: userId }).select(
-      '-owner -deliveryAdd -paymentMethod -note',
+      "-owner -deliveryAdd -paymentMethod -note"
     );
     if (orderList) {
       return res.status(200).json({ list: orderList });
@@ -79,7 +79,7 @@ const getOrderList2 = async (req, res, next) => {
 const getOrderDetails = async (req, res, next) => {
   try {
     const { orderId } = req.query;
-    const order = await OrderModel.findById(orderId).select('-_id -owner');
+    const order = await OrderModel.findById(orderId).select("-_id -owner");
     if (order) {
       const { deliveryAdd } = order;
       const { name, phone, address } = deliveryAdd;
@@ -156,21 +156,19 @@ const postCreateOrder = async (req, res, next) => {
       note,
     } = data;
 
-    let createdOrders = [];
-    let totalAmount = 0;
-
+    let response = {};
     for (let i = 0; i < productList.length; ++i) {
       const { orderProd, numOfProd } = productList[i];
       const product = await ProductModel.findById(orderProd.id);
       if (product) {
         if (product.stock < parseInt(numOfProd)) {
-          return res.status(401).json({ message: 'Sản phẩm tồn kho đã hết' });
+          return res.status(401).json({ message: "Sản phẩm tồn kho đã hết" });
         } else {
           await ProductModel.updateOne(
             { _id: orderProd.id },
-            { stock: product.stock - parseInt(numOfProd) },
+            { stock: product.stock - parseInt(numOfProd) }
           );
-          const newOrder = await OrderModel.create({
+          response = await OrderModel.create({
             owner,
             orderCode: helpers.generateVerifyCode(6),
             deliveryAdd,
@@ -183,36 +181,15 @@ const postCreateOrder = async (req, res, next) => {
             numOfProd,
             note,
           });
-
-          if (newOrder) {
-             createdOrders.push(newOrder.orderCode);
-             // Tính tổng tiền thật (đã trừ khuyến mãi)
-             totalAmount += (newOrder.orderProd.price * newOrder.numOfProd - (newOrder.orderProd.price * newOrder.numOfProd * newOrder.orderProd.discount) / 100) + newOrder.transportFee;
-          }
         }
       } else {
-        return res.status(401).json({ message: 'Sản phẩm đẫ ngừng bán' });
+        return res.status(401).json({ message: "Sản phẩm đẫ ngừng bán" });
       }
     }
-    // if (response) return res.status(200).json({});
-
-    if (createdOrders.length > 0) {
-      // Nếu là thanh toán tiền mặt, trả về như cũ
-      if (paymentMethod === 0) {
-        return res.status(200).json({});
-      } 
-      // Nếu là VNPay, trả về mã đơn hàng (ta sẽ gộp lại) và tổng tiền
-      else if (paymentMethod === 1) {
-        const combinedOrderId = createdOrders.join(';'); // Gộp nhiều mã đơn hàng thành 1 mã
-        return res.status(200).json({
-          orderId: combinedOrderId,
-          amount: totalAmount,
-        });
-      }
-  }
+    if (response) return res.status(200).json({});
   } catch (error) {
     console.error(error);
-    return res.status(401).json({ message: 'Lỗi hệ thống' });
+    return res.status(401).json({ message: "Lỗi hệ thống" });
   }
 };
 

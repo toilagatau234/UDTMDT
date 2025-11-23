@@ -1,24 +1,21 @@
-const AccountModel = require('../models/account.models/account.model');
-const mailConfig = require('../configs/mail.config');
-const constants = require('../constants');
-const bcrypt = require('bcryptjs');
-const jwtConfig = require('../configs/jwt.config');
-const jwt = require('jsonwebtoken');
-const express = require('express');
-const { OAuth2Client } = require('google-auth-library');
-const UserModel = require('../models/account.models/user.model');
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+const AccountModel = require("../models/account.models/account.model");
+const mailConfig = require("../configs/mail.config");
+const constants = require("../constants");
+const bcrypt = require("bcryptjs");
+const jwtConfig = require("../configs/jwt.config");
+const jwt = require("jsonwebtoken");
+const express = require("express");
 
 // fn: đăng nhập local
 // Note: login success -> create refresh token -> create jwt -> set cookie client
 const postLogin = async (req, res, next) => {
   try {
-    const { email, password, keepLogin } = req.body.account;
+    const { email, password, keepLogin } = req.body;
 
     // kiểm tra tài khoản có tồn tại không?
-    const account = await AccountModel.findOne({ email, authType: 'local' });
+    const account = await AccountModel.findOne({ email, authType: "local" });
     if (!account) {
-      return res.status(406).json({ message: 'Tài khoản không tồn tại !' });
+      return res.status(406).json({ message: "Tài khoản không tồn tại !" });
     }
 
     /*
@@ -30,7 +27,7 @@ const postLogin = async (req, res, next) => {
     if (failedLoginTimes >= constants.MAX_FAILED_LOGIN_TIMES) {
       return res
         .status(401)
-        .json({ failedLoginTimes, message: 'Quá số lần đăng nhập sai !' });
+        .json({ failedLoginTimes, message: "Quá số lần đăng nhập sai !" });
     }
 
     // kiểm tra password
@@ -43,13 +40,13 @@ const postLogin = async (req, res, next) => {
       if (failedLoginTimes <= constants.MAX_FAILED_LOGIN_TIMES) {
         await AccountModel.updateOne(
           { _id: account._id },
-          { failedLoginTimes },
+          { failedLoginTimes }
         );
       } else {
         // gửi thông báo đến mail
         const mail = {
           to: email,
-          subject: 'Cảnh báo quá số lần đăng nhập',
+          subject: "Cảnh báo quá số lần đăng nhập",
           html: mailConfig.htmlWarningLogin(),
         };
         await mailConfig.sendEmail(mail);
@@ -57,14 +54,14 @@ const postLogin = async (req, res, next) => {
       //return error
       return res
         .status(401)
-        .json({ failedLoginTimes, message: 'Mật khẩu không đúng !' });
+        .json({ failedLoginTimes, message: "Mật khẩu không đúng !" });
     } else {
       // ! đăng nhập thành công
       // tạo mã refresh token
       const refreshToken = await jwtConfig.encodedToken(
         process.env.JWT_SECRET_REFRESH_KEY,
         { accountId: account._id, keepLogin },
-        constants.JWT_REFRESH_EXPIRES_TIME,
+        constants.JWT_REFRESH_EXPIRES_TIME
       );
 
       // Note: create JWToken -> send client
@@ -76,104 +73,75 @@ const postLogin = async (req, res, next) => {
       // lưu refresh token và đặt số lần đn sai = 0
       await AccountModel.updateOne(
         { _id: account._id },
-        { failedLoginTimes: 0, refreshToken },
+        { failedLoginTimes: 0, refreshToken }
       );
 
-      if (req.app.get('env') === 'production') {
+      if (express().get("env") === "production") {
         if (token)
           // ! Dyno Heroku không cho set cookie cross domain (#.herokuapp.com)
           // ! Nên ta sẽ lưu nó vào trong localStorage (key=t)
           return res
             .status(200)
-            .json({ token, refreshToken, message: 'success' });
+            .json({ token, refreshToken, message: "success" });
       } else {
         //nếu không duy trì đăng nhập thì giữ trạng thái sống token là session
         const expiresIn = keepLogin
           ? new Date(Date.now() + constants.COOKIE_EXPIRES_TIME)
           : 0;
         // ! gửi token lưu vào cookie và chỉ đọc
-        res.cookie('access_token', token, {
+        res.cookie("access_token", token, {
           httpOnly: true,
           expires: expiresIn,
         });
-        return res.status(200).json({ refreshToken, message: 'success' });
+        return res.status(200).json({ refreshToken, message: "success" });
       }
     }
   } catch (error) {
     return res
       .status(401)
-      .json({ message: 'Đăng nhập thất bại. Thử lại', error });
+      .json({ message: "Đăng nhập thất bại. Thử lại", error });
   }
 };
 
 // fn: Đăng nhập với google
 const postLoginWithGoogle = async (req, res, next) => {
   try {
-    const { idToken } = req.body; // Front-end sẽ gửi lên idToken
+    // user from middleware passport
+    const { user } = req;
 
-    // Xác thực ID Token
-    const ticket = await client.verifyIdToken({
-      idToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
-    const payload = ticket.getPayload();
-    const { email, name, sub: googleId } = payload;
-
-    // 1. Kiểm tra xem email này đã đăng ký local chưa
-    const localUser = await AccountModel.findOne({ email, authType: 'local' });
-    if (localUser) {
-      return res.status(401).json({ message: 'Email đã được đăng ký cục bộ.' });
+    // nếu user có type = local thì báo lỗi
+    if (user.authType === "local") {
+      return res.status(401).json({ message: "Email đã được đăng ký." });
     }
 
-    // 2. Tìm hoặc tạo tài khoản Google
-    let account = await AccountModel.findOne({ googleId, authType: 'google' });
-    let userDetail = null;
-
-    if (!account) {
-      // Nếu tài khoản chưa tồn tại, tạo mới
-      account = new AccountModel({
-        authType: 'google',
-        googleId,
-        email,
-      });
-      await account.save();
-
-      userDetail = new UserModel({
-        accountId: account._id,
-        email, // email này không có trong model user, nhưng logic cũ của bạn có vẻ muốn vậy
-        fullName: name,
-        gender: true, // Giá trị mặc định
-      });
-      await userDetail.save();
-    }
-
-    // 3. Tạo Refresh Token và Access Token (JWT)
+    // tạo refresh token
     const refreshToken = await jwtConfig.encodedToken(
       process.env.JWT_SECRET_REFRESH_KEY,
-      { accountId: account._id, keepLogin: true },
-      constants.JWT_REFRESH_EXPIRES_TIME,
+      { accountId: user._id, keepLogin: true },
+      constants.JWT_REFRESH_EXPIRES_TIME
     );
-    // Lưu refresh token
-    await AccountModel.updateOne({ _id: account._id }, { refreshToken });
+    //save refresh token into database
+    await AccountModel.updateOne({ _id: user._id }, { refreshToken });
 
-    // Tạo Access Token
+    //create JWToken -> set header -> send client
     const token = await jwtConfig.encodedToken(process.env.JWT_SECRET_KEY, {
-      accountId: account._id,
+      accountId: user._id,
     });
 
-    if (req.app.get('env') === 'production') {
-      return res.status(200).json({ token, refreshToken, success: true });
+    if (express().get("env") === "production") {
+      if (token)
+        return res.status(200).json({ token, refreshToken, success: true });
     } else {
       const expiresIn = new Date(Date.now() + constants.COOKIE_EXPIRES_TIME);
-      res.cookie('access_token', token, {
+      //set cookie for web browser
+      res.cookie("access_token", token, {
         httpOnly: true,
         expires: expiresIn,
       });
-      return res.status(200).json({ refreshToken, success: true });
+      res.status(200).json({ refreshToken, success: true });
     }
   } catch (error) {
-    console.error('Google login error:', error);
-    return res.status(401).json({ message: 'Lỗi xác thực Google! Vui lòng thử lại.', error });
+    return res.status(401).json({ message: "Lỗi! Vui lòng thử lại.", error });
   }
 };
 
@@ -189,50 +157,49 @@ const postRefreshToken = async (req, res, next) => {
     const refreshToken = req.body.refresh_token;
     const account = await AccountModel.findOne({ refreshToken });
     if (!account) {
-      return res.status(403).json({ message: 'Invalid Token' });
+      return res.status(403).json({ message: "Invalid Token" });
     }
     //verify token
     const decoded = await jwt.verify(
       refreshToken,
-      process.env.JWT_SECRET_REFRESH_KEY,
+      process.env.JWT_SECRET_REFRESH_KEY
     );
     const { userID, keepLogin } = decoded.sub;
     //create new access_token -> set cookie
     const newAccessToken = await jwtConfig.encodedToken(
       process.env.JWT_SECRET_KEY,
-      { userID },
+      { userID }
     );
     //cookies expires if no keep Login then 0
     const expiresIn = keepLogin
       ? new Date(Date.now() + constants.COOKIE_EXPIRES_TIME)
       : 0;
-    res.cookie('access_token', newAccessToken, {
+    res.cookie("access_token", newAccessToken, {
       httpOnly: true,
       expires: expiresIn,
     });
     res.status(200).json({ refreshToken, success: true });
   } catch (error) {
-    return res.status(401).json({ message: 'Unauthorized', error });
+    return res.status(401).json({ message: "Unauthorized", error });
   }
 };
 
 // fn: logout
 const postLogout = async (req, res, next) => {
   try {
-    const access_token =
-      req.app.get('env') === 'production'
-        ? req.body.token
-        : req.cookies.access_token;
+    let access_token = null;
+    if (express().get("env") === "production") access_token = req.body.token;
+    else access_token = req.cookies.access_token;
     const decoded = await jwt.verify(access_token, process.env.JWT_SECRET_KEY);
     const { accountId } = decoded.sub;
     //remove refresh token
     await AccountModel.updateOne({ _id: accountId }, { refreshToken: null });
     //clear cookie client
-    res.clearCookie('access_token');
-    return res.status(200).json({ message: 'success' });
+    res.clearCookie("access_token");
+    return res.status(200).json({ message: "success" });
   } catch (error) {
     console.error(error);
-    return res.status(409).json({ message: 'failed' });
+    return res.status(409).json({ message: "failed" });
   }
 };
 

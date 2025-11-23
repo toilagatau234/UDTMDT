@@ -56,7 +56,6 @@ const getIsAuth = () => {
   };
 };
 
-// ! normal action
 
 // fn: set authentication cho người dùng
 const setIsAuth = (isAuth) => {

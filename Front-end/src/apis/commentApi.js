@@ -1,4 +1,4 @@
-import axiosClient from './axiosClient';
+import axiosClient from './axiosClient-firt';
 
 const COMMENT_API_URL = '/comments';
 

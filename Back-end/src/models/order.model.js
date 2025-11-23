@@ -1,10 +1,10 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 // Note: 1 record đơn hàng chỉ có 1 sản phẩm
 const orderSchema = new Schema({
   // chủ đơn hàng
-  owner: { type: Schema.Types.ObjectId, required: true, ref: 'user' },
+  owner: { type: Schema.Types.ObjectId, required: true, ref: "user" },
 
   // địa chỉ giao nhận
   deliveryAdd: {
@@ -17,7 +17,8 @@ const orderSchema = new Schema({
       province: String,
       district: String,
       wards: String,
-      details: { type: String, default: '' },
+      street: String,
+      details: { type: String, default: "" },
     },
   },
 
@@ -29,7 +30,7 @@ const orderSchema = new Schema({
 
   // sản phẩm lúc mua
   orderProd: {
-    id: { type: Schema.Types.ObjectId, required: true, ref: 'product' },
+    id: { type: Schema.Types.ObjectId, required: true, ref: "product" },
     name: { type: String, required: true, trim: true },
     price: { type: Number, required: true, default: 0 },
     discount: { type: Number, required: true, default: 0 },
@@ -39,7 +40,7 @@ const orderSchema = new Schema({
   numOfProd: { type: Number, required: true, default: 1 },
 
   // trạng thái đơn hàng
-  // 0 - Đặt hàng thành công, 1 - TTB đã tiếp nhận, 2 - Đang lấy hàng, 3 - Đóng gói xong
+  // 0 - Đặt hàng thành công, 1 - sandra đã tiếp nhận, 2 - Đang lấy hàng, 3 - Đóng gói xong
   // 4 - Bàn giao vận chuyển, 5 - Đang vận chuyển, 6 - Giao hàng thành công
   orderStatus: {
     type: Number,
@@ -69,6 +70,6 @@ const orderSchema = new Schema({
   note: { type: String, trim: true, maxlength: 200 },
 });
 
-const OrderModel = mongoose.model('order', orderSchema, 'orders');
+const OrderModel = mongoose.model("order", orderSchema, "orders");
 
 module.exports = OrderModel;

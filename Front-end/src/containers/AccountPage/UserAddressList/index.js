@@ -6,25 +6,30 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import AddressAddForm from './AddressAddForm';
 
-function AddressUserList(props) {
+UserAddressList.defaultProps = {
+  isCheckout: false,
+  onChecked: function () {},
+};
+
+function UserAddressList(props) {
   const { isCheckout, onChecked } = props;
+  const user = useSelector((state) => state.user);
   const [isVisibleForm, setIsVisibleForm] = useState(false);
   const [list, setList] = useState([]);
   const [activeItem, setActiveItem] = useState(-1);
-  const user = useSelector((state) => state.user);
   const [updateList, setUpdateList] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
-  // event: xoá 1 địa chỉ giao nhận
+  // : xoá 1 địa chỉ giao nhận
   const onDelDeliveryAdd = async (item) => {
     try {
       const response = await addressApi.delDeliveryAddress(user._id, item);
       if (response) {
-        message.success('Xoá địa chỉ thành công');
+        message.success("Xóa địa chỉ thành Công.");
         setUpdateList(!updateList);
       }
     } catch (error) {
-      message.error('Xoá địa chỉ giao, nhận thất bại.');
+      message.error("Xoá địa chỉ giao, nhận thất bại.");
     }
   };
 
@@ -33,25 +38,26 @@ function AddressUserList(props) {
     try {
       const response = await addressApi.putSetDefaultDeliveryAddress(
         user._id,
-        item,
+        item
       );
       if (response) {
-        message.success('Cập nhật thành công');
+        message.success("Cập nhật thành công");
         setUpdateList(!updateList);
       }
     } catch (error) {
-      message.error('Cập nhật thất bại.');
+      message.error("Cập nhật thất bại.");
     }
   };
 
-  // fn: hiển thị danh sách
-  function showAddressList(list = []) {
+  // : hiển thị danh sách
+  const showAddressList = (list = []) => {
     return (
       list &&
       list.map((item, index) => (
         <div
+          key={index}
           className={`bg-white bor-rad-8 box-sha-home p-tb-8 p-lr-16 m-b-16 ${
-            activeItem === index && isCheckout ? 'item-active' : ''
+            activeItem === index && isCheckout ? "item-active" : ""
           }`}
           onClick={() => {
             if (isCheckout) {
@@ -59,14 +65,15 @@ function AddressUserList(props) {
               onChecked(index);
             }
           }}
-          key={index}>
+        >
           <div className="d-flex justify-content-between m-b-4">
             <h3>
               <b>{item.name}</b>
               {index === 0 && !isCheckout && (
                 <span
                   className="font-size-12px p-tb-4 p-lr-8 m-l-8 bor-rad-4"
-                  style={{ border: 'solid 1px #3a5dd9', color: '#3a5dd9' }}>
+                  style={{ border: "solid 1px #3a5dd9", color: "#3a5dd9" }}
+                >
                   Mặc định
                 </span>
               )}
@@ -76,38 +83,39 @@ function AddressUserList(props) {
               <div>
                 <Button
                   type="link"
-                  onClick={() => onSetDefaultDeliveryAdd(index)}>
+                  onClick={() => onSetDefaultDeliveryAdd(index)}
+                >
                   Đặt mặc định
                 </Button>
                 <Button
-                  danger
-                  type="primary"
+                  type="dashed"
                   disabled={index === 0}
-                  onClick={() => onDelDeliveryAdd(index)}>
-                  Xoá
+                  onClick={() => onDelDeliveryAdd(index)}
+                >
+                  Xóa
                 </Button>
               </div>
             )}
           </div>
-          <p className="m-b-6">
-            <b>Địa chỉ:</b> {item.address}
+          <p className="m-b-4">
+            <b>Địa chỉ: </b> {item.address}
           </p>
-          <p className="m-b-6">
-            <b>Số điện thoại:</b> {item.phone}
+          <p className="m-b-4">
+            <b>Số điện thoại: </b> {item.phone}
           </p>
         </div>
       ))
     );
-  }
+  };
 
-  // event: Lấy danh sách địa chỉ
+  // : Lấy danh sách địa chỉ
   useEffect(() => {
     let isSubscribe = true;
-    async function getDeliveryAddressList() {
+    const getDeliveryAddressList = async () => {
       try {
         setIsLoading(true);
         const response = await addressApi.getDeliveryAddressList(user._id);
-        if (isSubscribe && response) {
+        if (response && isSubscribe) {
           setList(response.data.list);
           setIsLoading(false);
         }
@@ -117,28 +125,30 @@ function AddressUserList(props) {
           setIsLoading(false);
         }
       }
-    }
+    };
+
     if (user) getDeliveryAddressList();
+
     return () => (isSubscribe = false);
   }, [user, updateList]);
 
-  // rendering
   return (
     <>
       {isLoading ? (
-        <div className="t-center m-tb-48">
+        <div className="t-center m-tb-50">
           <Spin tip="Đang tải danh sách địa chỉ giao hàng ..." size="large" />
         </div>
       ) : (
-        <div className="User-Address-List">
+        <div className="AddressUserList">
           {/* thêm địa chỉ, chỉ cho tối đa 5 địa chỉ */}
           {list.length < 5 && (
             <Button
-              type="dashed"
+              type="primary"
               size="large"
               className="w-100"
               onClick={() => setIsVisibleForm(true)}
-              style={{ height: 54 }}>
+              style={{ height: 54 }}
+            >
               <PlusOutlined />
               Thêm địa chỉ
             </Button>
@@ -147,14 +157,14 @@ function AddressUserList(props) {
           {list.length > 0 ? (
             <div className="m-t-16">{showAddressList(list)}</div>
           ) : (
-            <h3 className="m-t-16 t-center" style={{ color: '#888' }}>
-              Hiện tại bạn chưa có địa chỉ giao, nhận hàng nào
-            </h3>
+            <div className="m-t-16 t-center">
+              Hiện tại bạn chưa có địa chỉ giao, nhận hàng
+            </div>
           )}
           {isVisibleForm && (
             <AddressAddForm
               onCloseForm={(addFlag) => {
-                // cở hiệu báo thêm mới địa chỉ thành công để cập nhật lại địa chỉ
+                //Cờ báo thêm mới địa chỉ thành công để cập nhật lại địa chỉ
                 if (addFlag) setUpdateList(!updateList);
                 setIsVisibleForm(false);
               }}
@@ -166,14 +176,8 @@ function AddressUserList(props) {
   );
 }
 
-AddressUserList.defaultProps = {
-  isCheckout: false,
-  onChecked: function() {},
-};
-
-AddressUserList.propTypes = {
+UserAddressList.propTypes = {
   isCheckout: PropTypes.bool,
   onChecked: PropTypes.func,
 };
-
-export default AddressUserList;
+export default UserAddressList;

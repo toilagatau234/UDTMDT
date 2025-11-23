@@ -14,7 +14,7 @@ import {
 import { Button, Menu } from "antd";
 import Avatar from "antd/lib/avatar/avatar";
 import SubMenu from "antd/lib/menu/SubMenu";
-import logo from "assets/imgs/Logo.png";
+import logo from "assets/imgs/logo.png";
 import OrderList from "containers/AdminPage/OrderList";
 import React, { useState } from "react";
 import defaultAvt from "../../assets/imgs/default-avt.png";

@@ -1,7 +1,7 @@
-import constants from 'constants/index';
-import axiosClient from './axiosClient-firt';
+import constants from "constants/index";
+import axiosClient from "./axiosClient-firt";
 
-const LOGIN_API_ENDPOINT = '/login';
+const LOGIN_API_ENDPOINT = "/login";
 
 const loginApi = {
   // api: đăng nhập
@@ -12,14 +12,14 @@ const loginApi = {
 
   // api: đăng nhập với google
   postLoginWithGoogle: (accessToken) => {
-    const url = LOGIN_API_ENDPOINT + '/gg';
+    const url = LOGIN_API_ENDPOINT + "/gg";
     return axiosClient.post(url, accessToken);
   },
 
   // api: authentication
   getAuth: () => {
-    const url = LOGIN_API_ENDPOINT + '/auth';
-    if (process.env.NODE_ENV === 'production')
+    const url = LOGIN_API_ENDPOINT + "/auth";
+    if (process.env.NODE_ENV === "production")
       return axiosClient.get(url, {
         params: {
           token: localStorage.getItem(constants.ACCESS_TOKEN_KEY),
@@ -30,14 +30,14 @@ const loginApi = {
 
   // api: refresh token
   postRefreshToken: (refreshToken) => {
-    const url = LOGIN_API_ENDPOINT + '/refresh_token';
+    const url = LOGIN_API_ENDPOINT + "/refresh_token";
     return axiosClient.post(url, refreshToken);
   },
 
   // api: logout
   postLogout: () => {
-    const url = LOGIN_API_ENDPOINT + '/logout';
-    if (process.env.NODE_ENV === 'production')
+    const url = LOGIN_API_ENDPOINT + "/logout";
+    if (process.env.NODE_ENV === "production")
       return axiosClient.post(url, {
         token: localStorage.getItem(constants.ACCESS_TOKEN_KEY),
       });

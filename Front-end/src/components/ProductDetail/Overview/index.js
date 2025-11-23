@@ -33,6 +33,7 @@ function ProductOverview(props) {
     rate,
     discount,
     stock,
+    otherInfo,
   } = products.product;
 
   const { catalogs, ...productRest } = products.productDetail;

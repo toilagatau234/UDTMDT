@@ -9,7 +9,7 @@ function ProductDetailPage() {
   const [product, setProduct] = useState(null);
   const [isNotFoundProduct, setIsNotFoundProduct] = useState(false);
 
-// Lấy sản phẩm
+  // Lấy sản phẩm
   useEffect(() => {
     document.querySelector("body").scroll({
       top: 0,
@@ -35,14 +35,18 @@ function ProductDetailPage() {
   }, [productId])
 
   return (
-    <>
-      {product ? (
-        <ProductDetail products={product} />
-      ) : (
-        <GlobalLoading content="Đang tải sản phẩm ..." />
-      )}
-      {isNotFoundProduct && <Navigate to="/not-found" replace/>}
-    </>
+    <div>
+      <>
+        {product ? (
+          <ProductDetail products={product} />
+        ) : (
+          <div className="min-h-100">
+            <GlobalLoading content="Đang tải sản phẩm ..." />
+          </div>
+        )}
+        {isNotFoundProduct && <Redirect to="/not-found" />}
+      </>
+    </div>
   );
 }
 

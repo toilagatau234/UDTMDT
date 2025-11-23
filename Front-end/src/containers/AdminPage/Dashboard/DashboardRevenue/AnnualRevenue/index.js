@@ -26,7 +26,7 @@ ChartJS.register(
 // tạo danh sách năm
 function generateLabels(
   startYear = new Date().getFullYear(),
-  endYear = new Date().getFullYear(),
+  endYear = new Date().getFullYear()
 ) {
   let result = [];
   for (let i = startYear; i <= endYear; ++i) {
@@ -46,9 +46,9 @@ function AnnualRevenue() {
     let isSubscribe = true;
     async function getStaAnnualRevenue() {
       try {
-        const response = await statisticApi.getStaAnnualRevenue(
+        const response = await statisticApi.getStaAnnualRevenue2(
           startYear,
-          endYear,
+          endYear
         );
         if (isSubscribe && response) {
           const { data } = response.data;
@@ -63,7 +63,7 @@ function AnnualRevenue() {
     return () => {
       isSubscribe = false;
     };
-  }, []);
+  }, [endYear]);
 
   return (
     <>
@@ -79,7 +79,7 @@ function AnnualRevenue() {
             labels: generateLabels(2010, endYear),
             datasets: [
               {
-                backgroundColor: '#2EA62A',
+                backgroundColor: "#2EA62A",
                 data: [...data],
               },
             ],
@@ -92,10 +92,10 @@ function AnnualRevenue() {
               fontSize: 18,
             },
             scales: {
-              y: [
+              yAxes: [
                 {
                   ticks: {
-                    callback: function(value, index, values) {
+                    callback: function (value, index, values) {
                       return value >= 1000000000
                         ? `${(value / 1000000000).toFixed(1)} tỷ`
                         : value >= 1000000

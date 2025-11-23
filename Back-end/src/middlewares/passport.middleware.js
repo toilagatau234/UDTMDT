@@ -1,40 +1,24 @@
 const passport = require("passport");
 const GooglePlusTokenStrategy = require("passport-google-token").Strategy;
-const AccountModel = require('../models/account.models/account.model');
+const AccountModel = require("../models/account.models/account.model");
 const UserModel = require("../models/account.models/user.model");
-const jwt = require('jsonwebtoken');
-const express = require('express');
+const jwt = require("jsonwebtoken");
+const express = require("express");
 
-// authentication with JWT
+//authentication with JWT
 const jwtAuthentication = async (req, res, next) => {
   try {
     res.locals.isAuth = false;
     let token = null;
+    if (express().get("env") === "production") token = req.query.token;
+    else token = req.cookies.access_token;
 
-    // 1. Ưu tiên lấy từ Cookie (Code cũ)
-    if (express().get('env') === 'production') {
-      token = req.query.token;
-    } else {
-      token = req.cookies.access_token;
-    }
-
-    // 2. [THÊM MỚI] Nếu không có cookie, lấy từ Header (Authorization: Bearer <token>)
-    if (!token && req.headers.authorization) {
-      const parts = req.headers.authorization.split(' ');
-      if (parts.length === 2 && parts[0] === 'Bearer') {
-        token = parts[1];
-      }
-    }
-
-    // Nếu vẫn không có token -> Lỗi hoặc Next (tùy logic)
+    //if not exist cookie[access_token] -> isAuth = false -> next
     if (!token) {
-      // Với các route cần bảo vệ, nếu không có token thì trả về 401 ngay
-      return res.status(401).json({
-        message: 'Unauthorized. Token not found.',
-      });
+      next();
+      return;
     }
-
-    // verify jwt
+    //verify jwt
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
     if (decoded) {
       const { accountId } = decoded.sub;
@@ -42,19 +26,12 @@ const jwtAuthentication = async (req, res, next) => {
       if (user) {
         res.locals.isAuth = true;
         req.user = user;
-        next(); // Cho phép đi tiếp
-        return;
       }
     }
-    
-    // Nếu token sai hoặc user không tồn tại
-    return res.status(401).json({
-      message: 'Unauthorized. Invalid token.',
-    });
-
+    next();
   } catch (error) {
     return res.status(401).json({
-      message: 'Unauthorized.',
+      message: "Unauthorized.",
       error,
     });
   }
@@ -107,35 +84,6 @@ passport.use(
   )
 );
 
-const AdminModel = require('../models/account.models/admin.model');
-
-// ... (other code)
-
-const adminAuthentication = async (req, res, next) => {
-  try {
-    const token = req.headers.authorization.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ message: 'Unauthorized. Token not found.' });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    if (decoded) {
-      const { adminId } = decoded.sub;
-      const admin = await AdminModel.findById(adminId);
-      if (admin) {
-        req.user = admin;
-        next();
-        return;
-      }
-    }
-
-    return res.status(401).json({ message: 'Unauthorized. Invalid token.' });
-  } catch (error) {
-    return res.status(401).json({ message: 'Unauthorized.', error });
-  }
-};
-
 module.exports = {
   jwtAuthentication,
-  adminAuthentication,
 };

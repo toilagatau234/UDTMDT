@@ -58,7 +58,7 @@ const adminApi = {
     const url = ADMIN_API_ENDPOINT + '/order';
     return axiosClient.get(url);
   },
-  // fn: Lấy danh sách đơn hàng
+   // fn: Lấy danh sách đơn hàng
    getOrderList2: () => {
     const url = ADMIN_API_ENDPOINT + '/order2';
     return axiosClient.get(url);

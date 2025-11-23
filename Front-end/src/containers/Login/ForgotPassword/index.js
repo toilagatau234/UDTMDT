@@ -19,7 +19,8 @@ function ForgotPassword() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isSending, setIsSending] = useState(false);
-  const emailRef = useRef('');
+  const emailRef = useRef("");
+
   // fn: gửi mã xác nhận
   const onSendCode = async () => {
     try {
@@ -28,7 +29,7 @@ function ForgotPassword() {
       const regex = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/;
 
       if (!regex.test(email)) {
-        message.error('Email không hợp lệ !');
+        message.error("Email không hợp lệ !");
         return;
       }
       // set loading, tránh việc gửi liên tục
@@ -37,7 +38,7 @@ function ForgotPassword() {
       // tiến hành gửi mã
       const result = await accountApi.postSendCodeForgotPW({ email });
       if (result.status === 200) {
-        message.success('Gửi thành công, kiểm tra email');
+        message.success("Gửi thành công, kiểm tra email");
         setIsSending(false);
       }
     } catch (error) {
@@ -45,7 +46,7 @@ function ForgotPassword() {
       if (error.response) {
         message.error(error.response.data.message);
       } else {
-        message.error('Gửi thất bại, thử lại');
+        message.error("Gửi thất bại, thử lại");
       }
     }
   };
@@ -58,50 +59,55 @@ function ForgotPassword() {
       if (result.status === 200) {
         setIsSubmitting(false);
         setIsSuccess(true);
-        message.success('Thay đổi mật khẩu thành công.');
+        message.success("Thay đổi mật khẩu thành công.");
       }
     } catch (error) {
       setIsSubmitting(false);
       if (error.response) {
         message.error(error.response.data.message);
       } else {
-        message.error('Cập nhật thất bại. Thử lại');
+        message.error("Cập nhật thất bại. Thử lại");
       }
     }
   };
 
   // giá trọ khởi tạo cho formik
   const initialValue = {
-    email: '',
-    password: '',
-    verifyCode: '',
+    email: "",
+    password: "",
+    verifyCode: "",
   };
 
   // validate form trước submit với yup
   const validationSchema = Yup.object().shape({
     email: Yup.string()
       .trim()
-      .required('* Email bạn là gì ?')
-      .email('* Email không hợp lệ !'),
+      .required("* Email bạn là gì ?")
+      .email("* Email không hợp lệ !"),
     password: Yup.string()
-      .trim()
-      .required('* Mật khẩu của bạn là gì ?'),
+    .trim()
+    .required("* Mật khẩu của bạn là gì ?")
+    .min(6, "* Mật khẩu ít nhất 6 ký tự")
+    .max(20, "* Mật khẩu tối đa 20 ký tự")
+    .matches(
+      /^(?=.*[A-Z])(?=.*[~!@#%\^&\*()_\+-=\|\\,\.\/\[\]{}'"`])(?=.*[0-9])(?=.*[a-z]).{6,}$/,
+      "Mật khẩu chứa chữ Hoa,chữ thường, số"
+    ),
     verifyCode: Yup.string()
       .trim()
-      .required('* Nhập mã xác nhận')
+      .required("* Nhập mã xác nhận")
       .length(
         constants.MAX_VERIFY_CODE,
-        `* Mã xác nhận có ${constants.MAX_VERIFY_CODE} ký tự`,
+        `* Mã xác nhận có ${constants.MAX_VERIFY_CODE} ký tự`
       ),
   });
 
-  //return...
   return (
-    <div className="ForgotPW container">
+    <div className="ForgotPassword container">
       {/* chuyển về home khi đã login */}
       {isSuccess && (
         <Delay wait={constants.DELAY_TIME}>
-          <Navigate to={constants.ROUTES.LOGIN} replace/>
+          <Redirect to={constants.ROUTES.LOGIN} />
         </Delay>
       )}
 
@@ -111,17 +117,20 @@ function ForgotPassword() {
       <Formik
         initialValues={initialValue}
         validationSchema={validationSchema}
-        onSubmit={onChangePassword}>
+        onSubmit={onChangePassword}
+      >
         {(formikProps) => {
           emailRef.current = formikProps.values.email;
-          const suffixColor = 'rgba(0, 0, 0, 0.25)';
+          const suffixColor = "rgba(0, 0, 0, 0.25)";
           return (
             <Form className="bg-form">
               <Row
                 className="input-border p-l-20 p-r-20"
                 gutter={[0, 24]}
                 justify="center"
-                style={{ margin: 0 }}>
+                style={{ marginLeft: 0, marginRight: 0 }}
+
+              >
                 {/* Form thông tin đăng nhập */}
                 <Col span={24} className="m-t-20">
                   <FastField
@@ -131,22 +140,18 @@ function ForgotPassword() {
                     placeholder="Email *"
                     size="large"
                     suffix={
-                      <Tooltip title="Email của bạn">
-                        <InfoCircleOutlined
-                          style={{
-                            color: suffixColor,
-                          }}
-                        />
-                      </Tooltip>
+                      <Tooltip title="Email của bạn ">
+                      <InfoCircleOutlined style={{ color: suffixColor }} />
+                    </Tooltip>
                     }
                   />
                 </Col>
                 <Col span={24}>
                   <FastField
                     name="password"
+                    type="password"
                     component={InputField}
                     className="input-form-common"
-                    type="password"
                     placeholder="Mật khẩu mới *"
                     size="large"
                     autocomplete="on"
@@ -176,7 +181,8 @@ function ForgotPassword() {
                     type="primary"
                     size="large"
                     onClick={onSendCode}
-                    loading={isSending}>
+                    loading={isSending}
+                  >
                     Gửi mã
                   </Button>
                 </Col>
@@ -188,7 +194,8 @@ function ForgotPassword() {
                     size="large"
                     type="primary"
                     htmlType="submit"
-                    loading={isSubmitting}>
+                    loading={isSubmitting}
+                  >
                     Thay đổi mật khẩu
                   </Button>
                   <div className="m-t-10">

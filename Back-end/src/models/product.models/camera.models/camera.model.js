@@ -1,16 +1,16 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
 const cameraSchema = new Schema({
   // _id sản phẩm bên ProductModel
-  idProduct: { type: Schema.Types.ObjectId, ref: 'product', required: true },
+  idProduct: { type: Schema.Types.ObjectId, ref: "product", required: true },
 
   // Màu sắc
   color: { type: String, trim: true },
 
   // Số điểm ảnh
   numberOfPixel: { type: Number, trim: true },
-  
+
   // khẩu dộ: 'f/4-5.6 IS STM'
   aperture: { type: String, trim: true },
 
@@ -37,6 +37,6 @@ const cameraSchema = new Schema({
   details: Schema.Types.ObjectId,
 });
 
-const CameraModel = mongoose.model('camera', cameraSchema, 'cameras');
+const CameraModel = mongoose.model("camera", cameraSchema, "cameras");
 
 module.exports = CameraModel;

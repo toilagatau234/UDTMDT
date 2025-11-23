@@ -5,23 +5,22 @@ import React, { useEffect, useState } from 'react';
 
 function Evaluation(props) {
   const { productId, rates } = props;
+
   const [cmtList, setCmtList] = useState([]);
 
   useEffect(() => {
     let isSubscribe = true;
-    async function getCommentList() {
+    const getCommentList = async () => {
       try {
         const response = await commentApi.getCommentList(productId);
         if (response && isSubscribe) {
           setCmtList(response.data);
         }
       } catch (error) {}
-    }
+    };
     getCommentList();
-
     return () => (isSubscribe = false);
   }, [props]);
-
 
   // event: xoá nhận xét
   const onDelete = async (_id) => {
@@ -53,13 +52,13 @@ function Evaluation(props) {
     }
   };
 
-  // rendering...
   return (
-    <EvaluationView productId={productId} rates={rates} cmtList={cmtList} />
+    <div>
+      <EvaluationView productId={productId} rates={rates} cmtList={cmtList} onDelete={onDelete} onEdit={onEdit} />
+    </div>
   );
 }
 
-Evaluation.defaultProps = {};
 Evaluation.propTypes = {
   productId: PropTypes.string,
   rates: PropTypes.array || PropTypes.object,

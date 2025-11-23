@@ -1,5 +1,5 @@
-const AddressModel = require('../models/address.model');
-const OrderModel = require('../models/order.model');
+const AddressModel = require("../models/address.model");
+const OrderModel = require("../models/order.model");
 const OrderModel2 = require("../models/order2.model");
 const OrderDetailsModel = require("../models/orderDetails.model");
 const ProductModel = require("../models/product.models/product.model");
@@ -15,7 +15,7 @@ const getStaMonthlyRevenue = async (req, res, next) => {
         $lte: new Date(`${year}-12-31`),
       },
       orderStatus: 6,
-    }).select('-_id orderDate numOfProd transportFee orderProd.price');
+    }).select("-_id orderDate numOfProd transportFee orderProd.price");
 
     // lấy danh sách đơn hàng năm trước đó
     const lastYearOrder = await OrderModel.find({
@@ -24,7 +24,7 @@ const getStaMonthlyRevenue = async (req, res, next) => {
         $lte: new Date(`${parseInt(year) - 1}-12-31`),
       },
       orderStatus: 6,
-    }).select('-_id orderDate numOfProd transportFee orderProd.price');
+    }).select("-_id orderDate numOfProd transportFee orderProd.price");
 
     // kết quả sau thống kê
     let thisYear = [...Array(12).fill(0)],
@@ -162,15 +162,14 @@ const getStaAnnualRevenue = async (req, res, next) => {
         $lte: new Date(`${endYear}-12-31`),
       },
       orderStatus: 6,
-    }).select('-_id orderDate numOfProd transportFee orderProd.price');
+    }).select("-_id orderDate numOfProd transportFee orderProd.price");
 
     let result = [
       ...Array(parseInt(endYear) + 1 - parseInt(startYear)).fill(0),
     ];
     if (orderList) {
       orderList.forEach((item) => {
-        const resIndex =
-          parseInt(endYear) - new Date(item.orderDate).getFullYear();
+        const resIndex = new Date(item.orderDate).getFullYear() - startYear;
         const totalMoney =
           item.orderProd.price * item.numOfProd + item.transportFee;
         result[resIndex] += totalMoney;
@@ -242,7 +241,7 @@ const getTopProvinceOrder = async (req, res, next) => {
     const topList = await OrderModel.aggregate([
       {
         $group: {
-          _id: '$deliveryAdd.address.province',
+          _id: "$deliveryAdd.address.province",
           count: { $sum: 1 },
         },
       },
@@ -259,7 +258,7 @@ const getTopProvinceOrder = async (req, res, next) => {
       for (let i = 0; i < topList.length; ++i) {
         const province = await AddressModel.findOne({
           id: topList[i]._id,
-        }).select('-_id name');
+        }).select("-_id name");
         if (province)
           result.push({ province: province.name, count: topList[i].count });
       }
@@ -269,7 +268,6 @@ const getTopProvinceOrder = async (req, res, next) => {
   } catch (error) {
     console.error(error);
     return res.status(401).json({ data: [] });
-    
   }
 };
 

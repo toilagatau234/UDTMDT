@@ -1,4 +1,4 @@
-import axiosClient from './axiosClient';
+import axiosClient from './axiosClient-firt';
 
 const STATISTIC_URL_ENDPOINT = '/statistic';
 

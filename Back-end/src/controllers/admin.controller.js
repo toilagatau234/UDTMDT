@@ -1,46 +1,30 @@
-const ProductModel = require('../models/product.models/product.model');
-const { cloudinary } = require('../configs/cloudinary.config');
-const ProductDescModel = require('../models/product.models/description.model');
-const constants = require('../constants');
-const LaptopModel = require('../models/product.models/computer.models/laptop.model');
-const DiskModel = require('../models/product.models/computer.models/disk.model');
-const DisplayModel = require('../models/product.models/computer.models/display.model');
-const MainboardModel = require('../models/product.models/computer.models/mainboard.model');
-const RamModel = require('../models/product.models/computer.models/ram.model');
-const MobileModel = require('../models/product.models/mobile.models/mobile.model');
-const BackupChargerModel = require('../models/product.models/mobile.models/backupCharger.model');
-const KeyboardModel = require('../models/product.models/peripherals.models/keyboard.model');
-const HeadphoneModel = require('../models/product.models/peripherals.models/headphone.model');
-const MonitorModel = require('../models/product.models/peripherals.models/monitor.model');
-const MouseModel = require('../models/product.models/peripherals.models/mouse.model');
-const RouterModel = require('../models/product.models/peripherals.models/router.model');
-const SpeakerModel = require('../models/product.models/peripherals.models/speaker.model');
-const CameraModel = require('../models/product.models/camera.models/camera.model');
-const WebcamModel = require('../models/product.models/camera.models/webcam.model');
-const helpers = require('../helpers');
-const AdminModel = require('../models/account.models/admin.model');
-const UserModel = require('../models/account.models/user.model');
-const AccountModel = require('../models/account.models/account.model');
-const OrderModel = require('../models/order.model');
+const ProductModel = require("../models/product.models/product.model");
+const { cloudinary } = require("../configs/cloudinary.config");
+const ProductDescModel = require("../models/product.models/description.model");
+const constants = require("../constants");
+const LaptopModel = require("../models/product.models/computer.models/laptop.model");
+const DiskModel = require("../models/product.models/computer.models/disk.model");
+const DisplayModel = require("../models/product.models/computer.models/display.model");
+const MainboardModel = require("../models/product.models/computer.models/mainboard.model");
+const RamModel = require("../models/product.models/computer.models/ram.model");
+const MobileModel = require("../models/product.models/mobile.models/mobile.model");
+const BackupChargerModel = require("../models/product.models/mobile.models/backupCharger.model");
+const KeyboardModel = require("../models/product.models/peripherals.models/keyboard.model");
+const HeadphoneModel = require("../models/product.models/peripherals.models/headphone.model");
+const MonitorModel = require("../models/product.models/peripherals.models/monitor.model");
+const MouseModel = require("../models/product.models/peripherals.models/mouse.model");
+const RouterModel = require("../models/product.models/peripherals.models/router.model");
+const SpeakerModel = require("../models/product.models/peripherals.models/speaker.model");
+const CameraModel = require("../models/product.models/camera.models/camera.model");
+const WebcamModel = require("../models/product.models/camera.models/webcam.model");
+const helpers = require("../helpers");
+const AdminModel = require("../models/account.models/admin.model");
+const UserModel = require("../models/account.models/user.model");
+const AccountModel = require("../models/account.models/account.model");
+const OrderModel = require("../models/order.model");
 const OrderModel2 = require("../models/order2.model");
 const OrderDetailsModel = require("../models/orderDetails.model")
 const CpuModel = require("../models/product.models/computer.models/cpu.model");
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-
-// // fn: upload product avatar to cloudinary
-// const uploadProductAvt = async (avtFile, productCode) => {
-//   try {
-//     const result = await cloudinary.uploader.upload(avtFile, {
-//       folder: `products/${productCode}`,
-//       transformation: [{ width: 1000, quality: 'auto:good', crop: 'limit' }],
-//     });
-//     const { secure_url } = result;
-//     return secure_url;
-//   } catch (error) {
-//     throw error;
-//   }
-// };
 
 // fn: upload product avatar to cloudinary
 const uploadProductAvt = async (avtFile, productCode) => {
@@ -54,23 +38,6 @@ const uploadProductAvt = async (avtFile, productCode) => {
     throw error;
   }
 };
-
-// // fn: upload product catalogs to cloudinary
-// const uploadProductCatalogs = async (catalogs, productCode) => {
-//   try {
-//     const urlCatalogs = [];
-//     for (let item of catalogs) {
-//       const result = await cloudinary.uploader.upload(item, {
-//         folder: `products/${productCode}`,
-//         transformation: [{ width: 1000, quality: 'auto:good', crop: 'limit' }],
-//       });
-//       urlCatalogs.push(result.secure_url);
-//     }
-//     return urlCatalogs;
-//   } catch (error) {
-//     throw error;
-//   }
-// };
 
 // fn: upload product catalogs to cloudinary
 const uploadProductCatalogs = async (catalogs, productCode) => {
@@ -87,24 +54,6 @@ const uploadProductCatalogs = async (catalogs, productCode) => {
     throw error;
   }
 };
-
-// // fn: upload product desc photo to cloudinary
-// const uploadDescProductPhoto = async (desc, productCode) => {
-//   try {
-//     let result = [];
-//     for (let item of desc) {
-//       const { content, photo } = item;
-//       const resUpload = await cloudinary.uploader.upload(photo, {
-//         folder: `products/${productCode}/desc`,
-//         transformation: [{ width: 1000, quality: 'auto:good', crop: 'limit' }],
-//       });
-//       result.push({ content, photo: resUpload.secure_url });
-//     }
-//     return result;
-//   } catch (error) {
-//     throw error;
-//   }
-// };
 
 // fn: upload product desc photo to cloudinary
 const uploadDescProductPhoto = async (desc, productCode) => {
@@ -128,8 +77,8 @@ const createProductDetail = async (type, product) => {
   try {
     switch (type) {
       case constants.PRODUCT_TYPES.LAPTOP: {
-        const { chipBrand, processorCount, series, detail, ...rest } = product;
-        const cpu = { chipBrand, processorCount, series, detail };
+        const { generationCpu, detailCpu, ...rest } = product;
+        const cpu = { generationCpu, detailCpu };
         return await LaptopModel.create({ cpu, ...rest });
       }
       case constants.PRODUCT_TYPES.DISK: {
@@ -173,8 +122,10 @@ const createProductDetail = async (type, product) => {
         return await CameraModel.create({ ...product });
       case constants.PRODUCT_TYPES.WEBCAM:
         return await WebcamModel.create({ ...product });
+      case constants.PRODUCT_TYPES.CPU:
+        return await CpuModel.create({ ...product });
       default:
-        throw new Error('Loại sản phẩm không hợp lệ');
+        throw new Error("Loại sản phẩm không hợp lệ");
     }
   } catch (error) {
     throw error;
@@ -185,12 +136,13 @@ const createProductDetail = async (type, product) => {
 const addProduct = async (req, res, next) => {
   try {
     const { product, details, desc } = req.body;
+
     const { category, type, avatar, code, ...productRest } = product;
     const { warranty, catalogs, ...detailRest } = details;
     // kiểm tra sản phẩm đã tồn tại hay chưa
     const isExist = await ProductModel.exists({ code });
     if (isExist) {
-      return res.status(400).json({ message: 'Mã sản phẩm đã tồn tại !' });
+      return res.status(400).json({ message: "Mã sản phẩm đã tồn tại !" });
     }
     // upload product avatar to cloudinary
     const avtUrl = await uploadProductAvt(avatar, code);
@@ -234,11 +186,11 @@ const addProduct = async (req, res, next) => {
       });
 
       if (newProductDetail) {
-        return res.status(200).json({ message: 'Thêm sản phẩm thành công' });
+        return res.status(200).json({ message: "Thêm sản phẩm thành công" });
       }
     }
   } catch (error) {
-    return res.status(409).json({ message: 'Lỗi đường truyền, thử lại' });
+    return res.status(409).json({ message: "Lỗi đường truyền, thử lại" });
   }
 };
 
@@ -261,7 +213,7 @@ const getProductListByType = async (req, res, next) => {
 const removeProduct = async (req, res, next) => {
   try {
     const { id } = req.query;
-    const response = await ProductModel.findById(id).select('type');
+    const response = await ProductModel.findById(id).select("type");
     if (response) {
       // xoá sản phẩm
       await ProductModel.deleteOne({ _id: id });
@@ -272,35 +224,28 @@ const removeProduct = async (req, res, next) => {
       const Model = helpers.convertProductType(type);
       await Model.deleteOne({ idProduct: id });
     }
-    return res.status(200).json({ message: 'success' });
+    return res.status(200).json({ message: "success" });
   } catch (error) {
-    return res.status(409).json({ message: 'Xoá sản phẩm thất bại' });
+    return res.status(409).json({ message: "Xoá sản phẩm thất bại" });
   }
 };
 
 // api: Cập nhật sản phẩm
 const updateProduct = async (req, res, next) => {
   try {
-    const { userName, password } = req.body;
-    const adminUser = await AdminModel.findOne({ userName });
-
-    if (!adminUser) {
-      return res.status(401).json({ message: 'Tên đăng nhập không đúng' });
+    const product = req.body;
+    const { _id, ...rest } = product;
+    const result = await ProductModel.updateOne(
+      { _id: product._id },
+      { ...rest }
+    );
+    if (result) {
+      return res.status(200).json({ message: "success" });
     }
-
-    const isMatch = await bcrypt.compare(password, adminUser.password);
-
-    if (!isMatch) {
-      return res.status(401).json({ message: 'Mật khẩu không đúng' });
-    }
-
-    const token = jwt.sign({ sub: { adminId: adminUser._id } }, process.env.JWT_SECRET_KEY, { expiresIn: '1h' });
-
-    return res.status(200).json({ token, name: adminUser.fullName });
-
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: 'Lỗi máy chủ' });
+    return res.status(409).json({ message: 'Cập nhật thất bại' });
+
   }
 };
 
@@ -322,13 +267,13 @@ const postLogin = async (req, res, next) => {
 // api: lấy danh sách user admin
 const getUserAdminList = async (req, res, next) => {
   try {
-    const list = await AdminModel.find({}).select('-password');
+    const list = await AdminModel.find({}).select("-password");
     if (list) {
       return res.status(200).json({ list });
     }
   } catch (error) {
     console.error(error);
-    return res.status(400).json({ message: 'failed' });
+    return res.status(400).json({ message: "failed" });
   }
 };
 
@@ -336,8 +281,8 @@ const getUserAdminList = async (req, res, next) => {
 const getCustomerList = async (req, res, next) => {
   try {
     const list = await UserModel.find({}).populate({
-      path: 'accountId',
-      select: 'email authType -_id',
+      path: "accountId",
+      select: "email authType -_id",
     });
     return res.status(200).json({ list });
   } catch (error) {
@@ -364,7 +309,7 @@ const delCustomer = async (req, res, next) => {
 // api: lấy danh sách đơn hàng
 const getOrderList = async (req, res, next) => {
   try {
-    const list = await OrderModel.find({}).select('-deliveryAdd -note');
+    const list = await OrderModel.find({}).select("-deliveryAdd -note");
     return res.status(200).json({ list });
   } catch (error) {
     console.error(error);

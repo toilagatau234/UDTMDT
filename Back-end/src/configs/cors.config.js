@@ -11,8 +11,9 @@ const corsOptions = {
 
 const corsConfig = {
   // Configures the Access-Control-Allow-Origin
-  origin: process.env.CORS_ORIGIN,
-
+  // origin: process.env.CORS_ORIGIN,
+  origin: true,
+  
   // Configures the Access-Control-Allow-Methods
   methods: 'GET, POST, OPTIONS, PUT, PATCH, DELETE',
 

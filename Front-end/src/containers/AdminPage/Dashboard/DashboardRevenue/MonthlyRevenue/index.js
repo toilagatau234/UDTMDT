@@ -24,16 +24,16 @@ ChartJS.register(
 );
 
 // tạo danh sách tháng
-function generateLabels() {
-  let result = [];
+const generateLabels = () => {
+  let results = [];
   for (let i = 0; i < 12; ++i) {
-    result.push(`T${i + 1}`);
+    results.push(`T${i + 1}`);
   }
-  return result;
-}
+  return results;
+};
 
 function MonthlyRevenue() {
-  // năm hiện tại
+  // Năm hiên tại
   const year = new Date().getFullYear();
   const [data, setData] = useState({ thisYear: [], lastYear: [] });
   const [isLoading, setIsLoading] = useState(true);
@@ -41,10 +41,11 @@ function MonthlyRevenue() {
   // Lây doanh thu
   useEffect(() => {
     let isSubScribe = true;
-    async function getStaMonthlyRevenue(year) {
+    const getStaMonthlyRevenue = async (year) => {
       try {
         setIsLoading(true);
-        const response = await statisticApi.getStaMonthlyRevenue(year);
+        // const response = await statisticApi.getStaMonthlyRevenue(year);
+        const response = await statisticApi.getStaMonthlyRevenue2(year);
         if (isSubScribe && response) {
           const { thisYear, lastYear } = response.data;
           setData({ thisYear, lastYear });
@@ -54,14 +55,14 @@ function MonthlyRevenue() {
         setData({ thisYear: [], lastYear: [] });
         if (isSubScribe) setIsLoading(false);
       }
-    }
+    };
+
     getStaMonthlyRevenue(year);
     return () => {
       isSubScribe = false;
     };
   }, []);
 
-  // rendering ...
   return (
     <>
       {isLoading ? (
@@ -76,12 +77,12 @@ function MonthlyRevenue() {
             labels: generateLabels(),
             datasets: [
               {
-                backgroundColor: '#2EA62A',
+                backgroundColor: "#2EA62A",
                 data: [...data.lastYear],
                 label: `Năm ${year - 1}`,
               },
               {
-                backgroundColor: '#4670FF',
+                backgroundColor: "#4670FF",
                 data: [...data.thisYear],
                 label: `Năm ${year}`,
               },
@@ -95,10 +96,10 @@ function MonthlyRevenue() {
               fontSize: 18,
             },
             scales: {
-              y: [
+              yAxes: [
                 {
                   ticks: {
-                    callback: function(value, index, values) {
+                    callback: function (value, index, values) {
                       return value >= 1000000000
                         ? `${(value / 1000000000).toFixed(1)} tỷ`
                         : value >= 1000000

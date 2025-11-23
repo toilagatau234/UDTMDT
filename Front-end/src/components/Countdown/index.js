@@ -1,5 +1,3 @@
-// Note: Nguồn tham khảo Viblo.asia & Stackoverflow
-
 import PropTypes from 'prop-types';
 import React, { useEffect, useState } from 'react';
 import moment from 'moment';

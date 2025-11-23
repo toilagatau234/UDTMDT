@@ -62,12 +62,10 @@ function HeaderView() {
     }
   };
 
-  // event: get event change window width
+ // event: get event change window width
   useEffect(() => {
-    const w = window.innerWidth;
-    if (w <= 992) setIsMdDevice(true);
-    if (w <= 480) setIsSmDevice(true);
-    window.addEventListener('resize', function() {
+    // Hàm xử lý logic resize
+    const handleResize = () => {
       const width = window.innerWidth;
       if (width <= 992) {
         setIsMdDevice(true);
@@ -76,10 +74,17 @@ function HeaderView() {
       }
       if (width <= 480) setIsSmDevice(true);
       else setIsSmDevice(false);
-    });
+    };
 
+    // Chạy 1 lần đầu để set state đúng
+    handleResize();
+
+    // Gắn sự kiện
+    window.addEventListener('resize', handleResize);
+
+    // Gỡ bỏ sự kiện khi component unmount
     return () => {
-      window.removeEventListener('resize');
+      window.removeEventListener('resize', handleResize);
     };
   }, []);
 

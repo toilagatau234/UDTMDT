@@ -39,7 +39,7 @@ const updateCartItem = (index, value) => {
 };
 
 //======= initial state =======//
-const carts = JSON.parse(localStorage.getItem(constants.CARTS));
+const carts = JSON.parse(localStorage.getItem("carts"));
 const initialState = carts ? carts : [];
 
 //======= reducer =======//
@@ -61,11 +61,11 @@ const cartReducer = (state = initialState, action) => {
       if (!isExist) newCart = [...newCart, item];
 
       // cập nhật lại local storage
-      localStorage.setItem(constants.CARTS, JSON.stringify(newCart));
+      localStorage.setItem("carts", JSON.stringify(newCart));
       return [...newCart];
     }
     case RESET_CART: {
-      localStorage.removeItem(constants.CARTS);
+      localStorage.removeItem("carts");
       return [];
     }
     case DEL_CART_ITEM: {
@@ -75,7 +75,7 @@ const cartReducer = (state = initialState, action) => {
         ...state.slice(index + 1, state.length),
       ];
       // cập nhật lại local storage
-      localStorage.setItem(constants.CARTS, JSON.stringify(newCart));
+      localStorage.setItem("carts", JSON.stringify(newCart));
       return [...newCart];
     }
     case UPDATE_CART_ITEM: {
@@ -84,7 +84,7 @@ const cartReducer = (state = initialState, action) => {
         i === index ? { ...item, amount: value } : { ...item },
       );
       // cập nhật lại local storage
-      localStorage.setItem(constants.CARTS, JSON.stringify(newCart));
+      localStorage.setItem("carts", JSON.stringify(newCart));
       return [...newCart];
     }
     default:

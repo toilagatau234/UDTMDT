@@ -16,38 +16,36 @@ function convertTime(nDate) {
   return `${m} ${d} ${y}, ${h}:00 am`;
 }
 
-// Do cả chương trình chỉ có 1 list carousels
-// Nên lưu thẳng vào đây để đỡ tốn chi phí query
 const list = [
   {
-    title: 'Loa, âm thanh',
-    type: 12,
-    content: 'Giảm đến 36%',
-    deadline: convertTime(6),
-  },
-  {
-    title: 'Laptop',
+    title: "Laptop",
     type: 0,
-    content: 'Giảm trực tiếp 1.5tr',
-    deadline: convertTime(2),
-  },
-  {
-    title: 'Phụ kiện',
-    type: 10,
-    content: 'Giảm đến 35%',
+    content: "Giảm trực tiếp 1.5tr",
     deadline: convertTime(3),
   },
   {
-    title: 'Bàn phím',
-    type: 8,
-    content: 'Giảm đến 49%',
-    deadline: convertTime(15),
+    title: "Màn Hình",
+    type: 9,
+    content: "Giảm 150.000đ",
+    deadline: convertTime(4),
   },
   {
-    title: 'Thiết bị mạng',
-    type: 11,
-    content: 'Sale sập tiệm 90%',
-    deadline: convertTime(4),
+    title: "Phụ kiện",
+    type: 10,
+    content: "Giảm đến 24%",
+    deadline: convertTime(5),
+  },
+  {
+    title: "Bàn phím",
+    type: 8,
+    content: "Giảm đến 49%",
+    deadline: convertTime(6),
+  },
+  {
+    title: "Loa, âm thanh",
+    type: 12,
+    content: "Giảm đến 49%",
+    deadline: convertTime(7),
   },
 ];
 
@@ -55,20 +53,24 @@ function DiscountList() {
   const [indexHeader, setIndexHeader] = useState(0);
   return (
     <div
-      className={`Discount-List box-sha-home d-flex flex-direction-column bg-${indexHeader}`}>
+      className={`Discount-List d-flex flex-direction-column bg-${indexHeader}`}
+    >
       {/* menu header */}
-      <div className="d-flex justify-content-between header">
+      <div className="header d-flex justify-content-between ">
         {list.map((item, index) => {
-          let className = `header-item w-100 d-flex flex-direction-column align-i-center font-weight-500 bg-white`;
           return (
             <div
+              className={
+                index !== indexHeader
+                  ? `header-item w-100 d-flex flex-direction-column align-items-center font-weight-500 bg-white`
+                  : `header-item w-100 d-flex flex-direction-column align-items-center font-weight-500 bg-white` +
+                    "active"
+              }
               key={index}
               onClick={() => {
                 setIndexHeader(index);
               }}
-              className={
-                index !== indexHeader ? className : className + ' active'
-              }>
+            >
               <h2>{item.title}</h2>
               <span>{item.content}</span>
             </div>
@@ -82,7 +84,8 @@ function DiscountList() {
         <Col
           span={24}
           md={6}
-          className="d-flex flex-direction-column justify-content-center countdown">
+          className="d-flex flex-direction-column justify-content-center countdown"
+        >
           <Countdown
             timeTillDate={list[indexHeader].deadline}
             timeFormat="MM DD YYYY, h:mm a"
@@ -92,7 +95,7 @@ function DiscountList() {
         <Col span={24} md={18}>
           <RelatedProduct
             type={list[indexHeader].type}
-            span={{ span: 24, xs: 24, sm: 12, md: 12, lg: 6, xl: 6, xxl: 6 }}
+            span={{ span: 24, xs: 24, sm: 12, md: 12, lg: 8, xl: 6, xxl: 6 }}
           />
         </Col>
       </Row>
