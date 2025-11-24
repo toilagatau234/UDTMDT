@@ -1,5 +1,5 @@
 import constants from "constants/index";
-import axiosClient from "./axiosClient-firt";
+import axiosClient from "./axiosClient";
 
 const LOGIN_API_ENDPOINT = "/login";
 

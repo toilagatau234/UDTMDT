@@ -4,12 +4,13 @@ import {
   EyeOutlined,
   WarningOutlined,
 } from "@ant-design/icons";
-import { message, Spin, Table, Tooltip } from "antd";
-import Modal from "antd/lib/modal/Modal";
+import { message, Spin, Table, Tooltip, Modal } from "antd";
+// XÓA: import Modal from "antd/lib/modal/Modal";
 import adminApi from "apis/adminApi";
 import productApi from "apis/productApi";
 import helpers from "helpers";
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import EditProductModal from "./EditProductModal";
 
 function generateFilterType() {
@@ -26,6 +27,7 @@ function SeeProduct() {
   const [isLoading, setIsLoading] = useState(false);
   const [list, setList] = useState([]);
 
+  // ... (Giữ nguyên các hàm onDelete, onCloseEditModal, useEffect) ...
   // event: xoá sản phẩm
   const onDelete = async (_id) => {
     try {
@@ -58,9 +60,10 @@ function SeeProduct() {
       try {
         const response = await productApi.getAllProducts(-1);
         if (response && isSubscribe) {
-          const { data } = response.data;
-          const list = data.map((item, index) => {
-            return { ...item, key: index };
+          // SỬA: Kiểm tra kỹ cấu trúc response
+          const listData = response.data.data || []; 
+          const list = listData.map((item, index) => {
+            return { ...item, key: item._id || index }; // Dùng _id làm key
           });
           setList(list);
           setIsLoading(false);
@@ -84,9 +87,9 @@ function SeeProduct() {
       key: "code",
       dataIndex: "code",
       render: (code, data) => (
-        <a target="blank" href={`/product/${data._id}`}>
+        <Link target="_blank" to={`/product/${data._id}`}>
           {code}
-        </a>
+        </Link>
       ),
     },
     {
@@ -97,6 +100,7 @@ function SeeProduct() {
         <Tooltip title={name}>{helpers.reduceProductName(name, 40)}</Tooltip>
       ),
     },
+    // ... (Giữ nguyên các cột Price, Type, Brand, Stock, Discount, Rate) ...
     {
       title: "Giá",
       key: "price",
@@ -174,21 +178,21 @@ function SeeProduct() {
           </Tooltip>
 
           <Tooltip title="Xem chi tiết" placement="left">
-            <a target="blank" href={`/product/${text._id}`}>
+            {/* SỬA: Dùng Link thay vì a href */}
+            <Link target="_blank" to={`/product/${text._id}`}>
               <EyeOutlined
                 className="action-btn-product"
                 style={{ color: "#444" }}
               />
-            </a>
+            </Link>
           </Tooltip>
         </>
       ),
     },
   ];
 
-  // rendering ...
+  // ... (Phần return giữ nguyên) ...
   return (
-    // <div className="position-relative p-8">
     <>
       {isLoading ? (
         <Spin
@@ -198,8 +202,6 @@ function SeeProduct() {
         />
       ) : (
         <>
-          {" "}
-          {/* modal confirm delete product */}
           <Modal
             title="Xác nhận xoá sản phẩm"
             visible={modalDel.visible}
@@ -212,10 +214,11 @@ function SeeProduct() {
             okText="Xoá"
             cancelText="Huỷ bỏ"
           >
-            <WarningOutlined style={{ fontSize: 28, color: "#F7B217" }} />
-            <b> Không thể khôi phục được, bạn có chắc muốn xoá ?</b>
+            <div style={{display: 'flex', alignItems: 'center'}}>
+                <WarningOutlined style={{ fontSize: 28, color: "#F7B217", marginRight: 10 }} />
+                <b> Không thể khôi phục được, bạn có chắc muốn xoá ?</b>
+            </div>
           </Modal>
-          {/* table show product list */}
           <Table
             pagination={{
               pageSize: 10,
@@ -226,7 +229,6 @@ function SeeProduct() {
             columns={columns}
             dataSource={list}
           />
-          {/* edit product modal */}
           <EditProductModal
             visible={editModal.visible}
             onClose={(value) => onCloseEditModal(value)}
@@ -235,7 +237,6 @@ function SeeProduct() {
         </>
       )}
     </>
-    // </div>
   );
 }
 

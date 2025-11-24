@@ -4,30 +4,30 @@ import PropTypes from 'prop-types';
 import React, { useEffect } from 'react';
 import './index.scss';
 
-// rendering ...
-function ProductView(props) {
-  const {
-    className,
-    name,
-    price,
-    avtUrl,
-    discount,
-    stock,
-    action,
-    height,
-    maxWidth,
-  } = props;
+// SỬA: Khai báo các props trực tiếp trong tham số hàm với giá trị mặc định
+function ProductView({
+  className = '',
+  name,
+  price = 0,
+  avtUrl,
+  discount,
+  stock = 1,
+  action = [],
+  height = 480,
+  maxWidth = 280,
+}) {
+  // Đã xóa dòng: const { className, name, ... } = props;
 
   // set height cho các avt của sản phẩm
   useEffect(() => {
     document
       .querySelectorAll('.ant-card-cover')
       .forEach((item) => (item.style.height = `${height / 2}px`));
-  }, []);
+  }, [height]);
 
-  // rendering ...
   return (
     <Card
+      // Bây giờ biến className đã được định nghĩa từ tham số hàm
       className={`Product-View p-b-18 ${className}`}
       id="card-item"
       style={{ height, maxWidth }}
@@ -77,23 +77,13 @@ function ProductView(props) {
 
       {/* Các nút bấm thêm nếu có */}
       <div className="d-flex m-t-10 justify-content-end">
-        {action.length > 0 && action.map((Item) => Item)}
+        {action.length > 0 && action.map((Item, index) => <span key={index}>{Item}</span>)}
       </div>
     </Card>
   );
 }
 
-// default props
-ProductView.defaultProps = {
-  price: 0,
-  stock: 1,
-  action: [],
-  maxWidth: 280,
-  height: 480,
-  className: '',
-};
-
-// check prop type
+// Giữ lại PropTypes để kiểm tra kiểu dữ liệu
 ProductView.propTypes = {
   className: PropTypes.string,
   name: PropTypes.string,

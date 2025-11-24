@@ -1,10 +1,12 @@
-import { EyeOutlined } from '@ant-design/icons';
-import { Button, Spin, Table, Tooltip } from 'antd';
+// SỬA: Thêm các icon còn thiếu: DeleteOutlined, WarningOutlined
+import { DeleteOutlined, EyeOutlined, WarningOutlined } from '@ant-design/icons';
+// SỬA: Thêm Modal và message vào import từ antd
+import { Button, message, Modal, Spin, Table, Tooltip } from 'antd';
 import orderApi from 'apis/orderApi';
 import helpers from 'helpers';
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
+// import { Link } from 'react-router-dom'; // Dòng này có thể bỏ nếu không dùng
 import OrderDetail from './OrderDetail';
 
 // : tạo danh sách lọc cho trạng thái đơn hàng
@@ -70,12 +72,6 @@ function OrderList() {
       title: "Tổng tiền",
       dataIndex: "totalMoney",
       key: "totalMoney",
-      // render: (value, records) => {
-      //   const total = helpers.calTotalOrderFee(records);
-      //   return helpers.formatProductPrice(total);
-      // },
-      // sorter: (a, b) =>
-      //   helpers.calTotalOrderFee(a) - helpers.calTotalOrderFee(b),
       render: (value, records) => {
         const total = helpers.calTotalOrderFee2(records);
         return helpers.formatProductPrice(total);
@@ -95,7 +91,6 @@ function OrderList() {
       title: "Hành động",
       key: "actions",
       fixed: "right",
-      // width: 150,
       render: (records) => (
         <>
           {/* Chỉ được hủy đơn hàng khi chưa xác nhận */}
@@ -134,7 +129,9 @@ function OrderList() {
         {/* modal confirm cancel order */}
         <Modal
           title="Xác nhận hủy đơn hàng"
-          visible={modalDel.visible}
+          // SỬA: visible -> open (nếu bạn dùng antd v5, nhưng code cũ dùng v4 nên visible vẫn ok, 
+          // tuy nhiên nếu warning deprecated thì đổi thành open)
+          visible={modalDel.visible} 
           onOk={() => {
             onDelete(modalDel._id);
             setModalDel({ visible: false, _id: false });
@@ -144,8 +141,10 @@ function OrderList() {
           okText="Xoá"
           cancelText="Huỷ bỏ"
         >
-          <WarningOutlined style={{ fontSize: 28, color: "#F7B217" }} />
-          <b> Không thể khôi phục được, bạn có chắc muốn hủy đơn hàng ?</b>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <WarningOutlined style={{ fontSize: 28, color: "#F7B217", marginRight: 10 }} />
+            <b> Không thể khôi phục được, bạn có chắc muốn hủy đơn hàng ?</b>
+          </div>
         </Modal>
         {/* table show order list */}
         <Table
@@ -178,8 +177,10 @@ function OrderList() {
           setIsLoading(false);
         }
       } catch (error) {
-        setIsLoading(false);
-        setOrderList([]);
+        if(isSubscribe) { // Thêm check isSubscribe để tránh set state khi unmount
+            setIsLoading(false);
+            setOrderList([]);
+        }
       }
     };
 
@@ -194,7 +195,7 @@ function OrderList() {
     <>
       {isLoading ? (
         <div className="t-center m-tb-50">
-          <Spin title="Đang tải danh sách đơn hàng của bạn ..." size="large" />
+          <Spin tip="Đang tải danh sách đơn hàng của bạn ..." size="large" />
         </div>
       ) : (
         showOrderList(orderList)

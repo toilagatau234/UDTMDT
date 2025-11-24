@@ -28,11 +28,12 @@ function SaleOff() {
     slidesToScroll: 1,
   };
   return (
-    <Slider className="Sale-Off" {...settings}>
+    // SỬA TẠI ĐÂY: Đổi <Slider> thành <Carousel>
+    <Carousel className="Sale-Off" {...settings}>
       {list.map((item, index) => (
         <img className="Sale-Off-img" src={item} alt={item} key={index} />
       ))}
-    </Slider>
+    </Carousel>
   );
 }
 export default SaleOff;

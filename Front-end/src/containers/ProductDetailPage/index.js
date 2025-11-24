@@ -44,7 +44,7 @@ function ProductDetailPage() {
             <GlobalLoading content="Đang tải sản phẩm ..." />
           </div>
         )}
-        {isNotFoundProduct && <Redirect to="/not-found" />}
+        {isNotFoundProduct && <Navigate to="/not-found" />}
       </>
     </div>
   );

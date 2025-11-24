@@ -9,11 +9,12 @@ import userLogo from 'assets/icon/user_32px.png';
 import constants from 'constants/index';
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Link, Navigate, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import './index.scss';
 import OrderList from './OrderList';
 import UpdateAccountForm from './UpdateForm';
-import AddressUserList from './UserAddressList';
+// SỬA: Import đúng tên UserAddressList
+import UserAddressList from './UserAddressList';
 
 function AccountPage() {
   const { pathname } = useLocation();
@@ -68,6 +69,7 @@ function AccountPage() {
         return (
           <>
             <h2 className="m-b-16 underline-title">Danh sách địa chỉ giao hàng </h2>
+            {/* Bây giờ thẻ này đã được định nghĩa đúng */}
             <UserAddressList />
           </>
         );

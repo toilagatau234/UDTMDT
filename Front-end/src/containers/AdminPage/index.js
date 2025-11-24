@@ -1,93 +1,94 @@
 import {
+  CaretRightOutlined,
   DashboardOutlined,
   EyeOutlined,
   HomeOutlined,
   IdcardOutlined,
+  MenuOutlined,
   NotificationOutlined,
   PlusCircleOutlined,
   ReconciliationOutlined,
   ShoppingCartOutlined,
   UserOutlined,
-  CaretRightOutlined,
-  MenuOutlined
+  GiftOutlined, // <--- THÊM MỚI: Icon cho menu Coupon
 } from "@ant-design/icons";
 import { Button, Menu } from "antd";
 import Avatar from "antd/lib/avatar/avatar";
 import SubMenu from "antd/lib/menu/SubMenu";
 import logo from "assets/imgs/logo.png";
-import OrderList from "containers/AdminPage/OrderList";
 import React, { useState } from "react";
 import defaultAvt from "../../assets/imgs/default-avt.png";
-import "./index.scss";
 import AdminUser from "./AdminUser";
 import Category from "./Category";
 import CustomersList from "./CustomersList";
 import DashboardOrders from "./Dashboard/DashboardOrders";
 import DashboardProduct from "./Dashboard/DashboardProduct";
 import DashboardRevenue from "./Dashboard/DashboardRevenue";
+import "./index.scss";
 import Login from "./Login";
+import OrderList from "./OrderList"; // Import trực tiếp vì không dùng lazy ở đây trong code cũ
 import SeeProduct from "./ProductPage/SeeProduct";
+
+// Lazy load các component nặng
 const AddProduct = React.lazy(() => import("./ProductPage/ProductAddForm"));
+// <--- THÊM MỚI: Import Coupon Component
+const CouponManagement = React.lazy(() => import("./Coupon")); 
 
 const mainColor = "#212121";
+
 const menuList = [
   {
     key: "d",
-    // title: "Dashboard",
     title: "Thống kê",
     icon: <DashboardOutlined />,
     children: [
-      // { key: "d0", title: "Revenue", icon: <CaretRightOutlined /> },
-      // { key: "d1", title: "Orders", icon: <CaretRightOutlined /> },
-      // { key: "d2", title: "Product", icon: <CaretRightOutlined /> },
-      { key: "d0", title: "Danh thu", icon: <CaretRightOutlined /> },
+      { key: "d0", title: "Doanh thu", icon: <CaretRightOutlined /> },
       { key: "d1", title: "Đơn hàng", icon: <CaretRightOutlined /> },
       { key: "d2", title: "Sản phẩm", icon: <CaretRightOutlined /> },
     ],
   },
   {
     key: "ca",
-    // title: "Category",
     title: "Danh mục",
     icon: <MenuOutlined />,
     children: [],
   },
   {
     key: "p",
-    // title: "Products",
     title: "Sản phẩm",
     icon: <ShoppingCartOutlined />,
     children: [
-      // { key: "p0", title: "See", icon: <EyeOutlined /> },
-      // { key: "p1", title: "Add", icon: <PlusCircleOutlined /> },
       { key: "p0", title: "Xem", icon: <EyeOutlined /> },
       { key: "p1", title: "Thêm", icon: <PlusCircleOutlined /> },
     ],
   },
   {
     key: "cu",
-    // title: "Customers",
     title: "Người dùng",
     icon: <UserOutlined />,
     children: [],
   },
   {
     key: "a",
-    // title: "Amin Users",
     title: "Quản trị viên",
     icon: <IdcardOutlined />,
     children: [],
   },
   {
     key: "o",
-    // title: "Order List",
     title: "Đơn hàng",
     icon: <ReconciliationOutlined />,
     children: [],
   },
+  // <--- THÊM MỚI: Menu Mã giảm giá
+  {
+    key: "cp", // Key viết tắt cho Coupon
+    title: "Mã giảm giá",
+    icon: <GiftOutlined />,
+    children: [],
+  },
   {
     key: "m",
-    // title: "Marketing",
     title: "Quảng cáo",
     icon: <NotificationOutlined />,
     children: [],
@@ -126,7 +127,6 @@ function AdminPage() {
   };
 
   const renderMenuItem = () => {
-    // return MenuItem if children = null
     return menuList.map((item, index) => {
       const { key, title, icon, children } = item;
       if (children.length === 0)
@@ -135,7 +135,6 @@ function AdminPage() {
             <span className="menu-item-title">{title}</span>
           </Menu.Item>
         );
-      // else render SubMenu
       return (
         <SubMenu className="menu-item" key={key} icon={icon} title={title}>
           {children.map((child, index) => (
@@ -168,6 +167,9 @@ function AdminPage() {
         return <CustomersList />;
       case "o":
         return <OrderList />;
+      // <--- THÊM MỚI: Case cho Coupon
+      case "cp":
+        return <CouponManagement />;
       default:
         break;
     }
@@ -185,6 +187,7 @@ function AdminPage() {
     setIsLogin(false);
     localStorage.removeItem("admin");
   };
+
   return (
     <div className="Admin-Page" style={{ backgroundColor: "#e5e5e5" }}>
       {!isLogin ? (
@@ -204,7 +207,6 @@ function AdminPage() {
             </div>
             <div className="flex-grow-1 d-flex align-items-center">
               <h2 className="t-color-primary flex-grow-1 p-l-44 main-title">
-                {/* <span>Admin Page &gt; </span> */}
                 <span>Trang quản trị &gt; </span>
                 <span className="option-title">
                   {showTitleSelected(keyMenu)}
@@ -249,7 +251,12 @@ function AdminPage() {
             </Menu>
 
             {/* main contents */}
-            <div className="flex-grow-1">{renderMenuComponent(keyMenu)}</div>
+            <div className="flex-grow-1">
+              {/* Sử dụng React.Suspense vì AddProduct và CouponManagement là lazy loaded */}
+              <React.Suspense fallback={<div>Loading...</div>}>
+                {renderMenuComponent(keyMenu)}
+              </React.Suspense>
+            </div>
           </div>
         </>
       )}

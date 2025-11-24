@@ -1,7 +1,7 @@
 import {
-  InfoCircleOutlined,
   DeleteOutlined,
   EditOutlined,
+  InfoCircleOutlined,
   WarningOutlined,
 } from "@ant-design/icons";
 import {
@@ -26,60 +26,69 @@ const suffixColor = "#aaa";
 function Category() {
   const [form] = Form.useForm();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [editModal, setEditModal] = useState({ visible: false, category: null });
+  const [editModal, setEditModal] = useState({
+    visible: false,
+    category: null,
+  });
   const [modalDel, setModalDel] = useState({ visible: false, _id: "" });
   const [isLoading, setIsLoading] = useState(false);
   const [list, setList] = useState([]);
 
-  // Xử lý lấy danh sách danh mục
-  useEffect(() => {
-    let isSubscribe = true;
-    setIsLoading(true)
-    const getCategories = async () => {
-      try {
-        const response = await categoryApi.getCategories();
-        if (response && isSubscribe) {
-          const { data } = response.data;
-          const list = data.map((item, index) => {
-            return { ...item, key: index };
-          });
-          setList(list);
-          setIsLoading(false);
-        }
-      } catch (error) {
-        if(isSubscribe) setIsLoading(false)
-        message.error("Lấy danh sách sản phẩm thất bại.");
-      }
-    };
-
-    getCategories();
-    return () => (isSubscribe = false);
-  }, []);
-
-  // fn: Xử lý submit form
-  const onFinish = async (name) => {
+  // fn: Hàm lấy danh sách danh mục (Tách ra để tái sử dụng)
+  const getCategories = async () => {
+    setIsLoading(true);
     try {
-      setIsSubmitting(true);
-      const response = await categoryApi.createCategory(name);
-      if (response.status === 200) {
-        setIsSubmitting(false);
-        message.success("Thêm danh mục sản phẩm thành công");
-        form.resetFields();
+      const response = await categoryApi.getCategories();
+      if (response) {
+        // Kiểm tra cấu trúc data trả về. Thường là response.data hoặc response.data.data
+        // Dựa trên code cũ của bạn là: const { data } = response.data;
+        const data = response.data.data || []; 
+        
+        const listData = data.map((item, index) => {
+          return { ...item, key: index }; // Nên dùng _id làm key nếu có
+        });
+        setList(listData);
+        setIsLoading(false);
       }
     } catch (error) {
-      setIsSubmitting(false);
-      if (error.response) {
-        message.error("Thêm danh mục sản phẩm thất bại. Thử lại");
-      }
+      message.error("Lấy danh sách danh mục thất bại.");
     }
+    setIsLoading(false);
   };
 
-   // event: xoá sản phẩm
-   const onDelete = async (_id) => {
+  // useEffect: Gọi API khi component mount
+  useEffect(() => {
+    getCategories();
+  }, []);
+
+  // fn: Xử lý submit form thêm mới
+  const onFinish = async (values) => {
+    try {
+      setIsSubmitting(true);
+      // values ở đây là object: { name: "Tên danh mục" }
+      const response = await categoryApi.createCategory(values);
+      if (response.status === 200 || response.status === 201) {
+        message.success("Thêm danh mục sản phẩm thành công");
+        form.resetFields(); // Xóa trắng ô nhập liệu
+        getCategories(); // QUAN TRỌNG: Load lại bảng danh sách
+      }
+    } catch (error) {
+      if (error.response) {
+        message.error(error.response.data.message || "Thêm thất bại.");
+      } else {
+        message.error("Lỗi kết nối. Thử lại.");
+      }
+    }
+    setIsSubmitting(false);
+  };
+
+  // event: xoá danh mục
+  const onDelete = async (_id) => {
     try {
       const response = await categoryApi.deleteCategory(_id);
       if (response && response.status === 200) {
         message.success("Xoá thành công.");
+        // Cập nhật lại state list thay vì gọi API để nhanh hơn
         const newList = list.filter((item) => item._id !== _id);
         setList(newList);
       }
@@ -88,13 +97,16 @@ function Category() {
     }
   };
 
-   // event: cập nhật sản phẩm
-   const onCloseEditModal = (newCategory) => {
-    const newList = list.map((item) =>
-      item._id !== newCategory._id ? item : { ...item, ...newCategory }
-    );
-    setList(newList);
-    setEditModal({ visible: false });
+  // event: cập nhật danh mục xong thì đóng modal và update list
+  const onCloseEditModal = (newCategory) => {
+    // Nếu có dữ liệu trả về từ modal (đã update thành công)
+    if (newCategory) {
+        const newList = list.map((item) =>
+        item._id !== newCategory._id ? item : { ...item, ...newCategory }
+        );
+        setList(newList);
+    }
+    setEditModal({ visible: false, category: null });
   };
 
   // Cột của bảng
@@ -103,36 +115,41 @@ function Category() {
       title: "ID",
       key: "_id",
       dataIndex: "_id",
+      width: 100,
+      ellipsis: true, 
     },
     {
-      title: "Tên",
+      title: "Tên danh mục",
       key: "name",
       dataIndex: "name",
       render: (name) => (
-        <Tooltip title={name}>{helpers.reduceProductName(name, 40)}</Tooltip>
+        <Tooltip title={name}>
+            <span style={{ fontWeight: 500 }}>{helpers.reduceProductName(name, 40)}</span>
+        </Tooltip>
       ),
     },
     {
       title: "Hành động",
       key: "actions",
       fixed: "right",
+      width: 100,
       render: (text) => (
         <>
-          <Tooltip title="Xóa" placement="left">
-            <DeleteOutlined
-              onClick={() => setModalDel({ visible: true, _id: text._id })}
-              className="m-r-8 action-btn-product"
-              style={{ color: "red" }}
-            />
-          </Tooltip>
-
-          <Tooltip title="Chỉnh sửa" placement="left">
+          <Tooltip title="Chỉnh sửa" placement="bottom">
             <EditOutlined
               onClick={() => {
                 setEditModal({ visible: true, category: { ...text } });
               }}
               className="m-r-8 action-btn-product"
-              style={{ color: "#444" }}
+              style={{ color: "#3555c5", cursor: "pointer", fontSize: 18, marginRight: 12 }}
+            />
+          </Tooltip>
+
+          <Tooltip title="Xóa" placement="bottom">
+            <DeleteOutlined
+              onClick={() => setModalDel({ visible: true, _id: text._id })}
+              className="action-btn-product"
+              style={{ color: "red", cursor: "pointer", fontSize: 18 }}
             />
           </Tooltip>
         </>
@@ -155,52 +172,55 @@ function Category() {
           </h1>
 
           {/* Form tạo danh mục */}
-          <div className="m-l-20 m-b-20">
+          <div className="m-l-20 m-b-20 p-20" style={{maxWidth: 800, margin: "0 auto"}}>
             <Form
               name="form"
               form={form}
               onFinish={onFinish}
-              onFinishFailed={() => message.error("Lỗi. Kiểm tra lại form")}
+              onFinishFailed={() => message.error("Vui lòng nhập tên danh mục!")}
               autoComplete="off"
+              layout="inline" // Chuyển sang inline cho đẹp nếu muốn
             >
-              <Row gutter={[16, 16]}>
-                <Col span={12} md={8} xl={6} xxl={4}>
-                  <Form.Item
-                    name="name"
-                    rules={[
-                      { required: true, message: "Bắt buộc", whitespace: true },
-                    ]}
-                  >
-                    <Input
-                      size="large"
-                      placeholder="Danh mục sản phẩm *"
-                      suffix={
-                        <Tooltip title="">
-                          <InfoCircleOutlined style={{ color: suffixColor }} />
-                        </Tooltip>
-                      }
-                    />
-                  </Form.Item>
-                </Col>
-                <Col span={12} md={8} xl={6} xxl={4}>
-                  <Form.Item>
-                    <Button
-                      loading={isSubmitting}
-                      size="large"
-                      type="primary"
-                      htmlType="submit"
-                    >
-                      Thêm danh mục
-                    </Button>
-                  </Form.Item>
-                </Col>
-              </Row>
+                <Row gutter={[16, 16]} style={{width: '100%', alignItems: 'center', justifyContent: 'center'}}>
+                    <Col span={16}>
+                        <Form.Item
+                            name="name"
+                            style={{marginBottom: 0, width: '100%'}}
+                            rules={[
+                            { required: true, message: "Vui lòng nhập tên danh mục", whitespace: true },
+                            ]}
+                        >
+                            <Input
+                            size="large"
+                            placeholder="Nhập tên danh mục mới *"
+                            suffix={
+                                <Tooltip title="Ví dụ: Laptop, Điện thoại">
+                                <InfoCircleOutlined style={{ color: suffixColor }} />
+                                </Tooltip>
+                            }
+                            />
+                        </Form.Item>
+                    </Col>
+                    <Col span={8}>
+                        <Form.Item style={{marginBottom: 0}}>
+                            <Button
+                            loading={isSubmitting}
+                            size="large"
+                            type="primary"
+                            htmlType="submit"
+                            block
+                            >
+                            Thêm danh mục
+                            </Button>
+                        </Form.Item>
+                    </Col>
+                </Row>
             </Form>
           </div>
 
           {/* modal confirm delete category */}
           <Modal
-            title="Xác nhận xoá sản phẩm"
+            title="Xác nhận xoá danh mục"
             visible={modalDel.visible}
             onOk={() => {
               onDelete(modalDel._id);
@@ -211,20 +231,27 @@ function Category() {
             okText="Xoá"
             cancelText="Huỷ bỏ"
           >
-            <WarningOutlined style={{ fontSize: 28, color: "#F7B217" }} />
-            <b> Không thể khôi phục được, bạn có chắc muốn xoá ?</b>
+            <div style={{display: 'flex', alignItems: 'center'}}>
+                <WarningOutlined style={{ fontSize: 28, color: "#F7B217", marginRight: 10 }} />
+                <b>Bạn có chắc chắn muốn xoá danh mục này không?</b>
+            </div>
           </Modal>
+
           {/* Danh sách danh mục  */}
-          <Table
-            pagination={{
-              pageSize: 10,
-              position: ["bottomCenter"],
-              showSizeChanger: false,
-            }}
-            className="admin-see-categories"
-            columns={columns}
-            dataSource={list}
-          />
+          <div className="p-20">
+            <Table
+                pagination={{
+                pageSize: 10,
+                position: ["bottomCenter"],
+                showSizeChanger: false,
+                }}
+                className="admin-see-categories"
+                columns={columns}
+                dataSource={list}
+                bordered
+            />
+          </div>
+
           {/* edit category modal */}
           <EditCategoryModal
             visible={editModal.visible}

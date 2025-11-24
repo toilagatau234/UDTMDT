@@ -128,6 +128,7 @@ const createProductDetail = async (type, product) => {
         throw new Error("Loại sản phẩm không hợp lệ");
     }
   } catch (error) {
+    console.error("Create Detail Error:", error); // Log lỗi để debug
     throw error;
   }
 };

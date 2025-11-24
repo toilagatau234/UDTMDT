@@ -1,24 +1,17 @@
-import { createStore, compose, applyMiddleware } from 'redux';
+import { configureStore } from '@reduxjs/toolkit';
 import rootReducer from '../reducers/index';
-import thunk from 'redux-thunk';
 
-//if environment === 'dev' then use REDUX devTool
-const composeEnhancer =
-  process.env.NODE_ENV !== 'production' &&
-  typeof window === 'object' &&
-  window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__
-    ? window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__({
-        shouldHotReload: false,
-      })
-    : compose;
-
-//configuration store
+// Cấu hình store sử dụng Redux Toolkit
 const configStore = () => {
-  //middleware
-  const middleware = [thunk];
-  //enhancer
-  const enhancer = [applyMiddleware(...middleware)];
-  const store = createStore(rootReducer, composeEnhancer(...enhancer));
+  const store = configureStore({
+    reducer: rootReducer,
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware({
+        serializableCheck: false, // Tắt kiểm tra serializable nếu cần thiết (cho promise, function...)
+      }),
+    devTools: process.env.NODE_ENV !== 'production', // Tự động bật DevTools ở môi trường dev
+  });
+  
   return store;
 };
 

@@ -20,19 +20,19 @@ import userActions from 'reducers/user';
 function App() {
   const dispatch = useDispatch();
   const isAuth = useSelector((state) => state.authenticate.isAuth);
-  const { renderRoutes, routes } = routesConfig;
+  const { routes } = routesConfig;
 
   useEffect(() => {
     //authentication
     dispatch(authActions.getIsAuth());
     return () => {};
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     //get user -> store redux
     if (isAuth) dispatch(userActions.getUserRequest());
     return () => {};
-  }, [isAuth]);
+  }, [isAuth, dispatch]);
 
   //rendering...
   return (
@@ -47,7 +47,6 @@ function App() {
               <Route
                 key={index}
                 path={route.path}
-                exact={route.exact}
                 element={route.main()}
               />
             ))}

@@ -12,9 +12,10 @@ import {
 } from 'antd';
 import addressApi from 'apis/addressApi';
 import orderApi from 'apis/orderApi';
+import couponApi from 'apis/couponApi';
 import CartPayment from 'components/Cart/Payment';
 import constants from 'constants/index';
-import AddressUserList from 'containers/AccountPage/UserAddressList';
+import UserAddressList from 'containers/AccountPage/UserAddressList';
 import helpers from 'helpers';
 import React, { useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -45,17 +46,57 @@ function PaymentPage() {
   const [transport, setTransport] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isOrderSuccess, setIsOrderSuccess] = useState(false);
+  
+  // State cho Coupon
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
 
-  // giá tạm tính
+  // SỬA: Đưa transportFee lên trước để tính toán
+  const transportFee = constants.TRANSPORT_METHOD_OPTIONS.find(
+    (item) => item.value === transport
+  ).price;
+
+  // SỬA: Logic tính giá tạm tính (Tổng tiền hàng sau khi đã trừ khuyến mãi từng sản phẩm)
+  // Công thức: Giá gốc - (Giá gốc * % giảm / 100) * số lượng
   const tempPrice = carts.reduce(
     (a, b) => a + (b.price - (b.price * b.discount) / 100) * b.amount,
     0
   );
 
-  // phi vận chuyển: <1000000 =0
-  const transportFee = constants.TRANSPORT_METHOD_OPTIONS.find(
-    (item) => item.value === transport
-  ).price;
+  // Số tiền được giảm bởi Coupon (mã giảm giá thêm)
+  const discountAmount = appliedCoupon ? (tempPrice * appliedCoupon.discount) / 100 : 0;
+  
+  // Tổng tiền cuối cùng = Tạm tính + Phí ship - Mã giảm giá
+  const finalTotal = tempPrice + transportFee - discountAmount;
+
+  // Hàm xử lý áp dụng mã
+  const onApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      message.warn("Vui lòng nhập mã giảm giá");
+      return;
+    }
+    try {
+      const res = await couponApi.checkCoupon(couponCode.trim().toUpperCase());
+      if (res && res.status === 200) {
+        setAppliedCoupon(res.data);
+        message.success(`Áp dụng mã thành công! Giảm ${res.data.discount}%`);
+      }
+    } catch (error) {
+      setAppliedCoupon(null);
+      if (error.response) {
+        message.error(error.response.data.message);
+      } else {
+        message.error("Lỗi kiểm tra mã");
+      }
+    }
+  };
+
+  // Hàm hủy mã
+  const onRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode("");
+    message.info("Đã hủy mã giảm giá");
+  };
 
   // : hiển thị danh sách đơn hàng
   const showOrderInfo = (carts) => {
@@ -73,6 +114,7 @@ function PaymentPage() {
                 className="font-size-16px font-weight-700 m-b-0"
                 style={{ color: "#3555C5" }}
               >
+                {/* Hiển thị giá đã giảm của sản phẩm */}
                 {helpers.formatProductPrice(
                   (item.price - (item.price * item.discount) / 100) *
                     item.amount
@@ -84,7 +126,8 @@ function PaymentPage() {
                     className="font-size-12px font-weight-700"
                     style={{ textDecoration: "line-through", color: "#aaa" }}
                   >
-                    {helpers.formatProductPrice(item.price)}
+                    {/* Hiển thị giá gốc gạch ngang */}
+                    {helpers.formatProductPrice(item.price * item.amount)}
                   </p>
                 </>
               )}
@@ -127,13 +170,15 @@ function PaymentPage() {
         orderDate,
         productList,
         note: note.current,
+        couponCode: appliedCoupon ? appliedCoupon.code : null, 
+        totalMoney: finalTotal, // Gửi tổng tiền chính xác lên server
       });
       if (response && response.status === 200) {
         setTimeout(() => {
           message.success("Đặt hàng thành công", 2);
           setIsLoading(false);
           setIsOrderSuccess(true);
-          dispatch(cartReducer.resetCart());
+          dispatch(cartReducers.resetCart());
         }, 1000);
       }
     } catch (error) {
@@ -143,13 +188,13 @@ function PaymentPage() {
   };
 
   const vnpayCheckout = async() => {
-    const response = await vnpayApi.vnpayCheckout()
+    message.warn("Tính năng đang bảo trì");
   }
 
   return (
     <>
       {carts.length <= 0 && !isOrderSuccess && (
-        <Redirect to={constants.ROUTES.CART} />
+        <Navigate to={constants.ROUTES.CART} replace />
       )}
       {isAuth ? (
         <div className="container m-tb-32" style={{ minHeight: "100vh" }}>
@@ -251,8 +296,6 @@ function PaymentPage() {
                           3
                         )
                       }
-
-                      // onClick={vnpayCheckout}
                     >
                       <div className="bg-gray p-tb-8 p-lr-16">
                         <b className="font-size-16px">
@@ -270,6 +313,30 @@ function PaymentPage() {
 
               {/* đặt hàng */}
               <Col span={24} md={8}>
+                {/* Phần nhập mã giảm giá */}
+                <div className="bg-white p-12 bor-rad-8 m-b-16">
+                    <h2 className="m-b-8">Mã giảm giá</h2>
+                    <div className="d-flex">
+                      <Input 
+                        placeholder="Nhập mã giảm giá" 
+                        value={couponCode}
+                        disabled={!!appliedCoupon}
+                        onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                        style={{ marginRight: 8 }}
+                      />
+                      {appliedCoupon ? (
+                        <Button danger onClick={onRemoveCoupon}>Hủy</Button>
+                      ) : (
+                        <Button type="primary" onClick={onApplyCoupon}>Áp dụng</Button>
+                      )}
+                    </div>
+                    {appliedCoupon && (
+                      <div className="m-t-8" style={{ color: 'green' }}>
+                        Đã giảm {appliedCoupon.discount}% (-{helpers.formatProductPrice(discountAmount)})
+                      </div>
+                    )}
+                </div>
+
                 {/* thông tin đơn hàng */}
                 <div className="bg-white p-12 bor-rad-8 m-tb-16">
                   <div className="d-flex justify-content-between">
@@ -289,6 +356,7 @@ function PaymentPage() {
                     isCheckout={true}
                     transportFee={transportFee}
                     onCheckout={onCheckout}
+                    discountAmount={discountAmount}
                   />
                   <div className="t-center p-b-16">
                     <span
@@ -303,7 +371,7 @@ function PaymentPage() {
           )}
         </div>
       ) : (
-        <Redirect to={constants.ROUTES.LOGIN} />
+        <Navigate to={constants.ROUTES.LOGIN} replace />
       )}
     </>
   );

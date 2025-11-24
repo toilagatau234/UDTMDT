@@ -7,9 +7,13 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import './index.scss';
 
-// rendering ...
-function RelatedProductList(props) {
-  const { list, title, span } = props;
+// SỬA: Khai báo destructuring props ngay tại tham số hàm với giá trị mặc định
+function RelatedProductList({
+  list = [],
+  title = '',
+  span = { span: 24, xs: 24, sm: 12, md: 8, lg: 6, xl: 4, xxl: 4 },
+}) {
+  // KHÔNG cần dòng này nữa: const { list, title, span } = props;
 
   const perPage = useRef(1);
   const [page, setPage] = useState(1);
@@ -86,7 +90,8 @@ function RelatedProductList(props) {
       )}
       <Col span={24}>
         <Row gutter={[16, 16]} className="m-t-16">
-          {showProductList(list, span)}
+          {/* showProductList dùng biến list và span từ scope bên ngoài */}
+          {showProductList(list)} 
         </Row>
       </Col>
 
@@ -104,12 +109,6 @@ function RelatedProductList(props) {
     </Row>
   );
 }
-
-RelatedProductList.defaultProps = {
-  list: [],
-  title: '',
-  span: { span: 24, xs: 24, sm: 12, md: 8, lg: 6, xl: 4, xxl: 4 },
-};
 
 RelatedProductList.propTypes = {
   list: PropTypes.array,

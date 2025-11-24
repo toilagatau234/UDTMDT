@@ -51,23 +51,33 @@ const getProductList = async (req, res, next) => {
 const getAllProducts = async (req, res, next) => {
   try {
     let { page, perPage } = req.query;
-    if (!page) page = 1;
-    if (!perPage) perPage = 8;
-    // lấy toàn bộ danh sách cho trang admin
-    if (parseInt(page) === -1) {
-      const result = await ProductModel.find({}).select('-otherInfo');
+    
+    // Chuyển đổi sang số nguyên an toàn
+    const pageInt = parseInt(page) || 1;
+    const perPageInt = parseInt(perPage) || 8;
+
+    // Lấy toàn bộ danh sách cho trang admin (page = -1)
+    if (pageInt === -1) {
+      const result = await ProductModel.find({})
+        .sort({ _id: -1 }) // Sắp xếp mới nhất lên đầu
+        .select('-otherInfo');
+        
       return res.status(200).json({ data: result });
     } else {
-      const nSkip = (parseInt(page) - 1) * perPage;
+      // Phân trang cho user
+      const nSkip = (pageInt - 1) * perPageInt;
       const numOfProduct = await ProductModel.countDocuments({});
       const result = await ProductModel.find({})
+        .sort({ _id: -1 }) // Sắp xếp mới nhất lên đầu
         .skip(nSkip)
-        .limit(parseInt(perPage))
+        .limit(perPageInt)
         .select('-otherInfo -code');
+        
       return res.status(200).json({ count: numOfProduct, data: result });
     }
   } catch (error) {
-    console.error(error);
+    console.error("GET ALL PRODUCTS ERROR:", error);
+    return res.status(500).json({ message: "Lỗi server khi lấy danh sách sản phẩm" });
   }
 };
 

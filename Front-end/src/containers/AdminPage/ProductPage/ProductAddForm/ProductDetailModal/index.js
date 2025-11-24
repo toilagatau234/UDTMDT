@@ -16,12 +16,14 @@ import {
   Tooltip,
   Upload,
 } from 'antd';
-import constants from 'constants';
+// SỬA: Thêm /index để đảm bảo import đúng
+import constants from 'constants/index';
 import React, { useRef, useState } from 'react';
 import Compressor from 'compressorjs';
 
 import PropTypes from 'prop-types';
 
+// ... (Phần còn lại của file giữ nguyên) ...
 function ProductDetail(props) {
   const { onGetDetailDes } = props;
   const [isVisible, setIsVisible] = useState(false);

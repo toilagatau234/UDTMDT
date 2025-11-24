@@ -1,4 +1,4 @@
-import axiosClient from './axiosClient-firt';
+import axiosClient from './axiosClient';
 
 const ACCOUNT_API_ENDPOINT = '/accounts';
 

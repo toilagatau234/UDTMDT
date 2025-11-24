@@ -23,23 +23,32 @@ function countItemInCart(productCode, carts) {
 
 function ProductOverview(props) {
   const { products } = props;
+  
+  // SỬA: Thêm || {} để tránh crash nếu product null
   const {
     _id,
     avt,
     name,
     brand,
     code,
-    price,
-    rate,
-    discount,
-    stock,
+    price = 0,
+    rate = [],
+    discount = 0,
+    stock = 0,
     otherInfo,
-  } = products.product;
+  } = products.product || {};
 
-  const { catalogs, ...productRest } = products.productDetail;
-  const imgList = [avt, ...catalogs];
-  const rateTotal = rate.reduce((a, b) => a + b, 0);
-  const priceBefore = price + (price * discount) / 100;
+  // SỬA: Thêm || {} và giá trị mặc định cho catalogs
+  const { catalogs = [], ...productRest } = products.productDetail || {};
+  
+  // Tạo danh sách ảnh an toàn
+  const imgList = [avt, ...catalogs].filter((item) => item);
+  
+  // Kiểm tra rate trước khi reduce
+  const rateTotal = Array.isArray(rate) ? rate.reduce((a, b) => a + b, 0) : 0;
+  
+  // Logic tính giá chuẩn
+  const priceAfter = price - (price * discount) / 100;
   const rateAvg = helpers.calStar(rate);
 
   const [numOfProduct, setNumberOfProduct] = useState(1);
@@ -85,7 +94,7 @@ function ProductOverview(props) {
     let product = {
       code,
       name,
-      price,
+      price, // Gửi giá gốc vào giỏ
       amount: numOfProduct,
       avt,
       discount,
@@ -97,7 +106,6 @@ function ProductOverview(props) {
     message.success('Thêm vào giỏ hàng thành công');
   };
 
-  // rendering ...
   return (
     <Row className="Product-Overview bg-white p-16">
       {/* Hình ảnh và thông số cơ bản sản phẩm */}
@@ -121,12 +129,10 @@ function ProductOverview(props) {
 
       {/* Tên và thông tin cơ bản */}
       <Col span={24} md={16} className="p-l-16">
-        {/* Tên sp */}
         <h2 className="font-size-24px ">
           {helpers.reduceProductName(name, 140)}
         </h2>
 
-        {/* Đánh giá sản phẩm */}
         <div className="p-tb-8">
           <Rate disabled defaultValue={rateAvg} allowHalf />
           <a href="#evaluation" className="m-l-8">
@@ -134,7 +140,6 @@ function ProductOverview(props) {
           </a>
         </div>
 
-        {/* Mã, thương hiệu */}
         <div
           className="font-size-16px font-weight-400"
           style={{ color: '#aaa' }}>
@@ -143,23 +148,22 @@ function ProductOverview(props) {
           &nbsp; | &nbsp;<span>{code}</span>
         </div>
 
-        {/* Giá */}
+        {/* Hiển thị Giá bán thực tế */}
         <h1 className="product-price font-weight-700 p-tb-8">
-          {price === 0 ? 'Liên hệ' : helpers.formatProductPrice(priceBefore)}
+          {price === 0 ? 'Liên hệ' : helpers.formatProductPrice(priceAfter)}
         </h1>
+
         {discount > 0 && price > 0 && (
           <>
             <h3 className="font-weight-700" style={{ color: '#333' }}>
               Bạn có 1 mã giảm giá {discount}% cho sản phẩm này
             </h3>
             <div className="d-flex flex-direction-column m-t-8 m-b-16 p-tb-8 p-lr-16 discount">
-              <span className="discount-price font-size-16px font-weight-700">
-                Giá: {helpers.formatProductPrice(price)}
+              <span className="discount-price font-size-16px font-weight-700" style={{textDecoration: 'line-through', color: '#aaa'}}>
+                Giá niêm yết: {helpers.formatProductPrice(price)}
               </span>
-              <span>
-                Đã giảm thêm: {helpers.formatProductPrice(priceBefore - price)}
-                &nbsp;
-                <span className="discount-decr"></span>
+              <span className="font-weight-500" style={{color: '#333'}}>
+                Tiết kiệm: {helpers.formatProductPrice(price - priceAfter)}
               </span>
               <div className="discount-mark"></div>
               <CheckOutlined className="discount-mark-icon" />
@@ -188,7 +192,7 @@ function ProductOverview(props) {
           )}
         </div>
 
-        {/* Button*/}
+        {/* Button */}
         {price > 0 && currentStock > 0 ? (
           <div className="btn-group p-tb-16 d-flex justify-content-around">
             <Button
@@ -221,7 +225,6 @@ function ProductOverview(props) {
           </Button>
         )}
         
-        {/* Khuyến mãi liên quan */}
         {otherInfo &&
           otherInfo.map((item, index) => (
             <ul

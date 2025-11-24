@@ -141,7 +141,7 @@ function SignUp() {
       {/*// Note: chuyển đến trang login khi đăng ký thành công */}
       {isRedirectLogin && (
         <Delay wait={constants.DELAY_TIME}>
-          <Redirect to={constants.ROUTES.LOGIN} />
+          <Navigate to={constants.ROUTES.LOGIN} replace/>
         </Delay>
       )}
 

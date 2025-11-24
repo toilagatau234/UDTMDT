@@ -6,7 +6,7 @@ function CustomersList() {
   const [data, setData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Xóa người dùng
+  // Xóa người dùng (Giữ nguyên)
   const onDelCustomer = async (id) => {
     try {
       const response = await adminApi.delCustomer(id);
@@ -20,6 +20,7 @@ function CustomersList() {
   };
 
   const columns = [
+    // ... (Giữ nguyên columns)
     {
       title: "ID",
       key: "id",
@@ -79,13 +80,17 @@ function CustomersList() {
         setIsLoading(true);
         const response = await adminApi.getCustomerList();
         if (response && isSubscribe) {
-          const { list } = response.data;
+          // SỬA: Thêm kiểm tra response.data và fallback mảng rỗng
+          // Nếu axiosClient trả về data trực tiếp thì dùng response.list, còn không thì response.data.list
+          const list = response.data?.list || response.list || [];
+          
           const newList = list.map((item, index) => {
             return {
               key: index,
               id: item._id,
-              email: item.accountId.email,
-              authType: item.accountId.authType,
+              // SỬA: Dùng Optional Chaining (?.) để tránh lỗi nếu accountId null
+              email: item.accountId?.email || "Không xác định",
+              authType: item.accountId?.authType || "Local",
               fullName: item.fullName,
               birthday: item.birthday,
               gender: item.gender,

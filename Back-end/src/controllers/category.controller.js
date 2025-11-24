@@ -4,9 +4,8 @@ const ProductModel = require("../models/product.models/product.model");
 const getCategories = async (req, res) => {
   try {
     const data = await CategoryModel.find();
-    if (data) {
-      return res.status(200).json({ data });
-    }
+    // Luôn trả về data, kể cả khi mảng rỗng
+    return res.status(200).json({ data });
   } catch (err) {
     return res.status(500).json({ msg: err.message });
   }
@@ -17,15 +16,18 @@ const createCategory = async (req, res, next) => {
     const { name } = req.body;
 
     const category = await CategoryModel.findOne({ name });
-    if (category)
-      return res.status(400).json({ msg: "this category already exists." });
+    if (category) {
+      return res.status(400).json({ msg: "Danh mục này đã tồn tại." });
+    }
 
     const newCategory = new CategoryModel({ name });
-
     await newCategory.save();
 
-    res.json({ msg: "Create a Category" });
-  } catch (error) {}
+    return res.status(200).json({ msg: "Tạo danh mục thành công" });
+  } catch (error) {
+    // SỬA LỖI QUAN TRỌNG: Phải trả về lỗi, không được để catch rỗng
+    return res.status(500).json({ msg: "Lỗi server", error: error.message });
+  }
 };
 
 const deleteCategory = async (req, res) => {
@@ -37,9 +39,11 @@ const deleteCategory = async (req, res) => {
     const response = await CategoryModel.findById(id);
     if (response) {
       await CategoryModel.deleteOne({ _id: id });
+      return res.status(200).json({ msg: "Xoá danh mục thành công" });
+    } else {
+        return res.status(404).json({ msg: "Không tìm thấy danh mục" });
     }
 
-    res.json({ msg: "Deleted a category success" });
   } catch (err) {
     return res.status(409).json({ message: "Xoá danh mục sản phẩm thất bại" });
   }
@@ -54,7 +58,7 @@ const updateCategory = async (req, res) => {
       { ...rest }
     );
     if (result) {
-      return res.status(200).json({ message: "success" });
+      return res.status(200).json({ message: "Cập nhật thành công" });
     }
   } catch (err) {
     console.error(err);

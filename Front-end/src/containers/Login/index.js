@@ -13,13 +13,14 @@ import constants from 'constants/index';
 import { FastField, Form, Formik } from 'formik';
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; // Đã import useNavigate
 import authReducers from 'reducers/auth';
 import * as Yup from 'yup';
 import './index.scss';
 
 function Login() {
-  const history = useHistory();
+  // SỬA: Thay useHistory bằng useNavigate
+  const navigate = useNavigate();
   const windowWidth = window.screen.width;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDisableLogin, setIsDisableLogin] = useState(false);
@@ -37,13 +38,16 @@ function Login() {
         localStorage.setItem(constants.ACCESS_TOKEN_KEY, data.token);
       dispatch(authReducers.setIsAuth(true));
       setTimeout(() => {
-        history.goBack();
+        // SỬA: Thay history.goBack() bằng navigate(-1) để quay lại trang trước
+        navigate(-1); 
       }, constants.DELAY_TIME);
     } catch (error) {
       message.error("Lỗi đăng nhập.");
     }
   };
 
+  // ... (Phần còn lại của code giữ nguyên)
+  
   // : đăng nhập
   const onLogin = async (account) => {
     try {
@@ -88,7 +92,6 @@ function Login() {
     password: Yup.string().trim().required("* Mật khẩu của bạn là gì ?"),
   });
 
-  //return...
   return (
     <div className="Login container">
       <h1 className="Login-title m-b-20 m-t-20 underline-title">

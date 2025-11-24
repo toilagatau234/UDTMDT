@@ -6,6 +6,7 @@ const ProductModel = require("../models/product.models/product.model");
 const UserModel = require("../models/account.models/user.model");
 const mailConfig = require("../configs/mail.config");
 const AccountModel = require("../models/account.models/account.model");
+const CouponModel = require('../models/coupon.model');
 
 // api: lấy danh sách đơn hàng
 const getOrderList = async (req, res, next) => {
@@ -207,6 +208,8 @@ const postCreateOrder2 = async (req, res, next) => {
       orderDate,
       productList,
       note,
+      couponCode,
+      totalMoney,
     } = data;
 
     const newOrder = await Order2Model.create({
@@ -219,6 +222,8 @@ const postCreateOrder2 = async (req, res, next) => {
       transportFee,
       orderDate,
       note,
+      couponCode,
+      totalMoney,
     });
 
     if (newOrder) {
@@ -246,6 +251,18 @@ const postCreateOrder2 = async (req, res, next) => {
       }
     }
 
+    // Xử lý trừ lượt sử dụng Coupon (Đặt sau vòng lặp for để đảm bảo đơn hàng không bị hủy do hết hàng)
+    if (couponCode) {
+      const coupon = await CouponModel.findOne({ code: couponCode });
+      // Kiểm tra nếu có mã và lượt dùng > 0 thì trừ đi 1
+      if (coupon && coupon.usageLimit > 0) {
+        await CouponModel.updateOne(
+          { code: couponCode },
+          { $inc: { usageLimit: -1 } }
+        );
+      }
+    }
+
     const userInfo = await UserModel.findById({_id: owner})
     const accountInfo = await AccountModel.findById({_id: userInfo.accountId})
     const addressStr = await helpers.convertAddress(newOrder.deliveryAdd.address);
@@ -268,32 +285,45 @@ const postCreateOrder2 = async (req, res, next) => {
 };
 
 // api: Hủy đơn hàng
-const removeOrder =  async (req, res, next) => {
+const removeOrder = async (req, res, next) => {
   try {
-    const { id } = req.query
-    const response = await Order2Model.findById(id);
-    if (response) {
-      // xóa đơn hàng
-      await Order2Model.deleteOne({_id: id})
-      // xóa chi chi tiết đơn hàng
-      const orderDetails = await OrderDetailModel.find({orderId: id})
+    const { id } = req.query;
+    const order = await Order2Model.findById(id); // Đổi tên biến response -> order cho dễ hiểu
+
+    if (order) {
+      // 1. Khôi phục lại lượt sử dụng Coupon (NẾU CÓ) <--- THÊM ĐOẠN NÀY
+      if (order.couponCode) {
+        await CouponModel.updateOne(
+          { code: order.couponCode },
+          { $inc: { usageLimit: 1 } } // Cộng lại 1 lượt
+        );
+      }
+
+      // 2. Xóa đơn hàng
+      await Order2Model.deleteOne({ _id: id });
+
+      // 3. Xóa chi tiết đơn hàng và hoàn kho sản phẩm (Giữ nguyên logic cũ của bạn)
+      const orderDetails = await OrderDetailModel.find({ orderId: id });
       if (orderDetails) {
-        // Cập nhật lại số lượng sản phẩm trong kho
         for (let i = 0; i < orderDetails.length; i++) {
           const { orderProd, numOfProd } = orderDetails[i];
-          const product = await ProductModel.findById(orderProd.id)
-          await ProductModel.updateOne(
-            {_id: orderProd.id},
-            {stock: product.stock + parseInt(numOfProd)})
+          const product = await ProductModel.findById(orderProd.id);
+          if (product) {
+            await ProductModel.updateOne(
+              { _id: orderProd.id },
+              { stock: product.stock + parseInt(numOfProd) }
+            );
+          }
         }
-        await OrderDetailModel.deleteMany({orderId: id})
+        await OrderDetailModel.deleteMany({ orderId: id });
       }
     }
     return res.status(200).json({ message: "success" });
   } catch (error) {
-    return res.status(409).json({ message: "Xoá dơn hàng thất bại" });
+    console.error(error); // Nên log lỗi để debug
+    return res.status(409).json({ message: "Xoá đơn hàng thất bại" });
   }
-}
+};
 
 module.exports = {
   getOrderList,

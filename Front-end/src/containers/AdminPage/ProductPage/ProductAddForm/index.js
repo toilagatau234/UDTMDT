@@ -21,8 +21,11 @@ import {
   Upload,
 } from "antd";
 import adminApi from "../../../../apis/adminApi";
+import categoryApi from "../../../../apis/categoryApi"; // Đảm bảo đường dẫn import đúng
 import constants from "../../../../constants";
 import Compressor from "compressorjs";
+
+// Import các component chi tiết sản phẩm
 import Laptop from "./Laptop";
 import Disk from "./Disk";
 import ProductDetail from "./ProductDetailModal";
@@ -40,7 +43,7 @@ import Camera from "./Camera";
 import Webcam from "./Webcam";
 import Router from "./Router";
 import Cpu from "./Cpu";
-import categoryApi from "apis/categoryApi";
+
 const suffixColor = "#aaa";
 
 function AddProduct() {
@@ -48,32 +51,35 @@ function AddProduct() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isTypeSelected, setIsTypeSelected] = useState(false);
   const [typeSelected, setTypeSelected] = useState(-1);
-  const [category, setCategory] = useState([])
+  const [category, setCategory] = useState([]); // State lưu danh sách danh mục
   const productDecs = useRef(null);
-  // avt file chưa nén
+
+  // State quản lý ảnh
   const [avtFileList, setAvtFileList] = useState([]);
-  // avt đã nén
   const [avatar, setAvatar] = useState(null);
-  // danh sách hình ảnh sp chưa nén
   const [fileList, setFileList] = useState([]);
-  // danh sách hình ảnh sp đã nén
   const fileCompressedList = useRef([]);
 
-  // Xử lý lấy danh sách danh mục
+  // === 1. SỬA LẠI LOGIC LẤY DANH MỤC ===
   useEffect(() => {
     let isSubscribe = true;
     const getCategories = async () => {
       try {
-        const response = await categoryApi.getCategories()
-        if(response && isSubscribe) {
-          setCategory(response.data.data)
+        const response = await categoryApi.getCategories();
+        if (response && isSubscribe) {
+          // SỬA LẠI: Backend trả về { data: [...] } nên cần truy cập response.data.data
+          // Nếu response.data.data không tồn tại thì fallback về mảng rỗng
+          const listCategory = response.data.data || [];
+          setCategory(listCategory);
         }
-      } catch (error) {}
-    }
+      } catch (error) {
+        // message.error("Lấy danh mục thất bại");
+      }
+    };
 
-    getCategories()
+    getCategories();
     return () => (isSubscribe = false);
-  }, [])
+  }, []);
 
   // fn: xử lý khi chọn loại sản phẩm
   const onProductTypeChange = (value) => {
@@ -84,47 +90,30 @@ function AddProduct() {
   // fn: Render ra component tương ứng khi chọn loại sp
   const onRenderProduct = (value) => {
     switch (value) {
-      case 0:
-        return <Laptop />;
-      case 1:
-        return <Disk />;
-      case 2:
-        return <Display />;
-      case 3:
-        return <MainBoard />;
-      case 4:
-        return <Ram />;
-      case 5:
-        return <Mobile />;
-      case 6:
-        return <BackupCharger />;
-      case 7:
-        return <Headphone />;
-      case 8:
-        return <Keyboard />;
-      case 9:
-        return <Monitor />;
-      case 10:
-        return <Mouse />;
-      case 11:
-        return <Router />;
-      case 12:
-        return <Speaker />;
-      case 13:
-        return <Camera />;
-      case 14:
-        return <Webcam />;
-      case 15:
-        return <Cpu />;
-      default:
-        break;
+      case 0: return <Laptop />;
+      case 1: return <Disk />;
+      case 2: return <Display />;
+      case 3: return <MainBoard />;
+      case 4: return <Ram />;
+      case 5: return <Mobile />;
+      case 6: return <BackupCharger />;
+      case 7: return <Headphone />;
+      case 8: return <Keyboard />;
+      case 9: return <Monitor />;
+      case 10: return <Mouse />;
+      case 11: return <Router />;
+      case 12: return <Speaker />;
+      case 13: return <Camera />;
+      case 14: return <Webcam />;
+      case 15: return <Cpu />;
+      default: return null;
     }
   };
 
   const onCompressFile = async (file, type = 0) => {
     new Compressor(file, {
-      quality: 0.6, //tỉ lệ nén ảnh
-      convertSize: 2000000, //nén png 2MB
+      quality: 0.6,
+      convertSize: 2000000,
       success(fileCompressed) {
         const reader = new FileReader();
         reader.readAsDataURL(fileCompressed);
@@ -138,17 +127,15 @@ function AddProduct() {
         };
       },
       error(err) {
-        message.error("Lỗi: ", err);
+        message.error("Lỗi nén ảnh: " + err.message);
       },
     });
   };
 
-  // fn: lấy bài viết mô tả sp
   const onGetDetailDesc = (data) => {
     productDecs.current = data;
   };
 
-  // fn: Reset form
   const onResetForm = () => {
     form.resetFields();
     fileCompressedList.current = [];
@@ -157,85 +144,75 @@ function AddProduct() {
     setFileList([]);
   };
 
-  // fn: kiểm tra hình ảnh, bài viết trước submit form
   const onValBeforeSubmit = async (data) => {
     try {
       if (!avatar) {
-        message.error("Thêm avatar !", 2);
+        message.error("Hãy thêm ảnh đại diện (Avatar) !", 2);
         return;
       }
-      // cảnh báo khi không có bài viết mô tả
-      if (productDecs.current === null)
+
+      const confirmSubmit = (content) => {
         Modal.confirm({
-          title: "Bạn có chắc muốn submit ?",
-          content: "Chưa có BÀI VIẾT MÔ TẢ cho sản phẩm này !",
+          title: "Bạn có chắc muốn tạo sản phẩm này?",
+          content: content,
           icon: <ExclamationCircleOutlined />,
-          okButtonProps: true,
-          onCancel() {
-            return;
-          },
           onOk() {
             onSubmit(data);
           },
         });
-      else if (fileCompressedList.current.length === 0)
-        Modal.confirm({
-          title: "Bạn có chắc muốn submit ?",
-          content: "Chưa có HÌNH ẢNH MÔ TẢ cho sản phẩm này !",
-          icon: <ExclamationCircleOutlined />,
-          okButtonProps: true,
-          onCancel() {
-            return;
-          },
-          onOk() {
-            onSubmit(data);
-          },
-        });
-      else onSubmit(data);
+      };
+
+      if (productDecs.current === null) {
+        confirmSubmit("Cảnh báo: Chưa có BÀI VIẾT MÔ TẢ cho sản phẩm này!");
+      } else if (fileCompressedList.current.length === 0) {
+        confirmSubmit("Cảnh báo: Chưa có HÌNH ẢNH MÔ TẢ (Slide) cho sản phẩm này!");
+      } else {
+        onSubmit(data);
+      }
     } catch (error) {
-      message.error("Có lỗi. Thử lại !");
+      message.error("Có lỗi xảy ra.");
     }
   };
 
-  // fn: Xử lý submit form
   const onSubmit = async (data) => {
     try {
       setIsSubmitting(true);
-      const { category, code, name, price, discount, stock, brand, otherInfo, ...rest } =
-        data;
-      // các thuộc tính chung của sản phẩm
+      const { category, code, name, price, discount, stock, brand, otherInfo, ...rest } = data;
+
+      // Tạo object product
       const product = {
         type: typeSelected,
-        discount,
-        category,
+        category, // Dữ liệu category từ form (đã chọn ở Select)
         code,
         name,
         price,
-        brand,
+        discount,
         stock,
+        brand,
         otherInfo,
         avatar,
       };
-      // thuộc tính chi tiết của từng loại sp
+
       const catalogs = fileCompressedList.current.map((item) => item.data);
       const details = {
         ...rest,
         catalogs,
       };
 
-      // data được gửi đi
       const dataSend = { product, details, desc: productDecs.current };
       const response = await adminApi.postAddProduct(dataSend);
+
       if (response.status === 200) {
-        setIsSubmitting(false);
         message.success("Thêm sản phẩm thành công");
+        onResetForm(); // Reset form sau khi thành công
       }
+      setIsSubmitting(false);
     } catch (error) {
       setIsSubmitting(false);
       if (error.response) {
         message.error(error.response.data.message);
       } else {
-        message.error("Thêm sản phẩm thất bại. Thử lại");
+        message.error("Thêm sản phẩm thất bại.");
       }
     }
   };
@@ -245,7 +222,7 @@ function AddProduct() {
       <h1 className="t-center p-t-20">
         <b>Thêm sản phẩm</b>
       </h1>
-      {/* chọn loại sản phẩm */}
+
       <Select
         className="m-l-20"
         size="large"
@@ -259,73 +236,67 @@ function AddProduct() {
           </Select.Option>
         ))}
       </Select>
-      {/* form thông tin sản phẩm */}
+
       {isTypeSelected && (
         <div className="p-20">
           <Form
             name="form"
             form={form}
             onFinish={onValBeforeSubmit}
-            onFinishFailed={() => message.error("Lỗi. Kiểm tra lại form")}
+            onFinishFailed={() => message.error("Vui lòng điền đầy đủ thông tin bắt buộc!")}
           >
-            {/* các thông số cơ bản */}
             <Row gutter={[16, 16]}>
-              {/* // Note: tổng quan một sản phẩm */}
               <Col span={24}>
                 <h2>Thông tin cơ bản sản phẩm</h2>
               </Col>
+
+              {/* === 2. SỬA LẠI PHẦN CHỌN DANH MỤC === */}
               <Col span={12} md={8} xl={6} xxl={4}>
                 <Form.Item
                   name="category"
+                  rules={[{ required: false, message: "Bắt buộc chọn danh mục" }]}
                 >
                   <Select allowClear size="large" placeholder="Danh mục *">
-                    {category.map((item, index) => (
-                      <Select.Option value={item.name} key={index}>
+                    {/* Kiểm tra mảng category trước khi map */}
+                    {Array.isArray(category) && category.map((item) => (
+                      // Sử dụng item._id làm key thay vì index để tối ưu React
+                      <Select.Option value={item.name} key={item._id || item.name}>
                         {item.name}
                       </Select.Option>
                     ))}
                   </Select>
                 </Form.Item>
               </Col>
-              {/* mã sản phẩm */}
+
               <Col span={12} md={8} xl={6} xxl={4}>
                 <Form.Item
                   name="code"
-                  rules={[
-                    { required: true, message: "Bắt buộc", whitespace: true },
-                  ]}
+                  rules={[{ required: true, message: "Bắt buộc", whitespace: true }]}
                 >
                   <Input
                     size="large"
                     placeholder="Mã sản phẩm *"
                     suffix={
-                      <Tooltip title="SKU200500854">
+                      <Tooltip title="Ví dụ: SKU200500854">
                         <InfoCircleOutlined style={{ color: suffixColor }} />
                       </Tooltip>
                     }
                   />
                 </Form.Item>
               </Col>
-              {/* tên sản phẩm */}
+
               <Col span={12} md={8} xl={6} xxl={4}>
                 <Form.Item
                   name="name"
-                  rules={[
-                    { required: true, message: "Bắt buộc", whitespace: true },
-                  ]}
+                  rules={[{ required: true, message: "Bắt buộc", whitespace: true }]}
                 >
                   <Input
                     size="large"
                     placeholder="Tên sản phẩm *"
-                    suffix={
-                      <Tooltip title="Laptop Apple MacBook Air 13 2019 MVFM2SA/A (Core i5/8GB/128GB SSD/UHD 617/macOS/1.3 kg)">
-                        <InfoCircleOutlined style={{ color: suffixColor }} />
-                      </Tooltip>
-                    }
                   />
                 </Form.Item>
               </Col>
-              {/* giá sản phẩm */}
+
               <Col span={12} md={8} xl={6} xxl={4}>
                 <Form.Item
                   name="price"
@@ -338,10 +309,12 @@ function AddProduct() {
                     placeholder="Giá *"
                     min={0}
                     max={1000000000}
+                    formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                    parser={value => value.replace(/\$\s?|(,*)/g, '')}
                   />
                 </Form.Item>
               </Col>
-              {/* số hang tồn kho */}
+
               <Col span={12} md={8} xl={6} xxl={4}>
                 <Form.Item
                   name="stock"
@@ -349,34 +322,26 @@ function AddProduct() {
                 >
                   <InputNumber
                     style={{ width: "100%" }}
-                    step={5}
+                    step={1}
                     size="large"
                     min={0}
-                    max={100000}
-                    placeholder="Số lượng hàng tồn kho *"
+                    placeholder="Số lượng tồn kho *"
                   />
                 </Form.Item>
               </Col>
-              {/* thương hiệu */}
+
               <Col span={12} md={8} xl={6} xxl={4}>
                 <Form.Item
                   name="brand"
-                  rules={[
-                    { required: true, message: "Bắt buộc", whitespace: true },
-                  ]}
+                  rules={[{ required: true, message: "Bắt buộc", whitespace: true }]}
                 >
                   <Input
                     size="large"
                     placeholder="Thương hiệu *"
-                    suffix={
-                      <Tooltip title="Apple">
-                        <InfoCircleOutlined style={{ color: suffixColor }} />
-                      </Tooltip>
-                    }
                   />
                 </Form.Item>
               </Col>
-              {/*Thời gian bảo hành*/}
+
               <Col span={12} md={8} xl={6} xxl={4}>
                 <Form.Item
                   name="warranty"
@@ -388,33 +353,37 @@ function AddProduct() {
                     size="large"
                     min={0}
                     max={240}
-                    placeholder="Tg bảo hành (Theo tháng) *"
+                    placeholder="Bảo hành (tháng) *"
                   />
                 </Form.Item>
               </Col>
-              {/*Mức giảm giá*/}
+
               <Col span={12} md={8} xl={6} xxl={4}>
                 <Form.Item
                   name="discount"
+                  initialValue={0}
                   rules={[{ required: true, message: "Bắt buộc" }]}
                 >
                   <InputNumber
                     style={{ width: "100%" }}
-                    step={10}
+                    step={5}
                     size="large"
                     min={0}
-                    max={30}
-                    placeholder="phần trăm khuyến mãi (5%) *"
+                    max={100}
+                    placeholder="Giảm giá (%) *"
+                    formatter={value => `${value}%`}
+                    parser={value => value.replace('%', '')}
                   />
                 </Form.Item>
               </Col>
-              {/* avatar */}
+
               <Col span={12} md={8} xl={6} xxl={4}>
                 <Upload
                   listType="picture"
                   fileList={avtFileList}
                   onChange={({ fileList }) => {
-                    if (avtFileList.length < 1) setAvtFileList(fileList);
+                    // Chỉ giữ lại 1 file mới nhất
+                    setAvtFileList(fileList.slice(-1));
                   }}
                   onRemove={() => {
                     setAvatar(null);
@@ -422,19 +391,20 @@ function AddProduct() {
                   }}
                   beforeUpload={(file) => {
                     onCompressFile(file, 0);
-                    return false;
+                    return false; // Prevent auto upload
                   }}
+                  maxCount={1}
                 >
                   <Button
-                    disabled={avatar !== null ? true : false}
+                    disabled={avatar !== null}
                     className="w-100 h-100"
                     icon={<UploadOutlined />}
                   >
-                    Upload Avatar
+                    Upload Avatar (Ảnh đại diện)
                   </Button>
                 </Upload>
               </Col>
-              {/* other information */}
+
               <Col span={12} md={8} xl={6} xxl={4}>
                 <Form.List name="otherInfo">
                   {(fields, { add, remove }) => (
@@ -443,43 +413,29 @@ function AddProduct() {
                         <Space
                           key={field.key}
                           style={{ display: "flex", marginBottom: 8 }}
-                          align="center"
+                          align="baseline"
                         >
                           <Form.Item
                             {...field}
                             name={[field.name, "key"]}
                             fieldKey={[field.fieldKey, "key"]}
-                            rules={[
-                              {
-                                required: true,
-                                message: "vd: Ưu đãi",
-                              },
-                            ]}
+                            rules={[{ required: true, message: "Nhập tên thông tin" }]}
                           >
-                            <Input placeholder="Key" />
+                            <Input placeholder="Tên (vd: Ưu đãi)" />
                           </Form.Item>
                           <Form.Item
                             {...field}
                             name={[field.name, "value"]}
                             fieldKey={[field.fieldKey, "value"]}
-                            rules={[
-                              {
-                                required: true,
-                                message: "vd: Combo chuột",
-                              },
-                            ]}
+                            rules={[{ required: true, message: "Nhập giá trị" }]}
                           >
-                            <Input placeholder="Value" />
+                            <Input placeholder="Giá trị (vd: Tặng chuột)" />
                           </Form.Item>
-
-                          <MinusCircleOutlined
-                            onClick={() => remove(field.name)}
-                          />
+                          <MinusCircleOutlined onClick={() => remove(field.name)} />
                         </Space>
                       ))}
                       <Form.Item>
                         <Button
-                          size="large"
                           type="dashed"
                           onClick={() => add()}
                           block
@@ -493,36 +449,37 @@ function AddProduct() {
                 </Form.List>
               </Col>
 
-              {/* mô tả chi tiết */}
               <ProductDetail onGetDetailDes={onGetDetailDesc} />
 
-              {/* // Note: chi tiết một sản phẩm */}
               {isTypeSelected && (
                 <Col span={24}>
                   <h2 className="m-b-10">
-                    Thông tin chi tiết cho&nbsp;
-                    <b>{constants.PRODUCT_TYPES[typeSelected].label}</b>
+                    Thông tin chi tiết: <b>{constants.PRODUCT_TYPES[typeSelected].label}</b>
                   </h2>
-                  {onRenderProduct(typeSelected)}
+                  <div className="bg-white p-16 bor-rad-8">
+                    {onRenderProduct(typeSelected)}
+                  </div>
                 </Col>
               )}
 
-              {/* // Note: hình ảnh sản phẩm */}
               <Col span={24}>
                 <h2 className="m-b-10">
-                  Hình ảnh của sản phẩm (Tối đa 10 sản phẩm)
+                  Hình ảnh Slide sản phẩm (Tối đa 10 ảnh)
                 </h2>
-
                 <Upload
                   listType="picture-card"
                   multiple={true}
-                  onRemove={(file) => {
-                    fileCompressedList.current =
-                      fileCompressedList.current.filter(
-                        (item) => item.uid !== file.uid
-                      );
-                  }}
                   fileList={fileList}
+                  onRemove={(file) => {
+                    const index = fileList.indexOf(file);
+                    const newFileList = fileList.slice();
+                    newFileList.splice(index, 1);
+                    setFileList(newFileList);
+                    // Xóa khỏi mảng nén
+                    fileCompressedList.current = fileCompressedList.current.filter(
+                      (item) => item.uid !== file.uid
+                    );
+                  }}
                   onChange={({ fileList }) => setFileList(fileList)}
                   beforeUpload={(file) => {
                     onCompressFile(file, 1);
@@ -533,13 +490,11 @@ function AddProduct() {
                 </Upload>
               </Col>
 
-              {/* submit button */}
-              <Col span={24} className="d-flex justify-content-end">
+              <Col span={24} className="d-flex justify-content-end m-t-20">
                 <Button
                   className="m-r-20"
                   size="large"
                   danger
-                  type="primary"
                   onClick={onResetForm}
                 >
                   Reset Form
@@ -550,7 +505,7 @@ function AddProduct() {
                   type="primary"
                   htmlType="submit"
                 >
-                  Thêm sản phẩm
+                  Hoàn tất thêm sản phẩm
                 </Button>
               </Col>
             </Row>

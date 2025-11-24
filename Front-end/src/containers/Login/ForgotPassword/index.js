@@ -107,7 +107,7 @@ function ForgotPassword() {
       {/* chuyển về home khi đã login */}
       {isSuccess && (
         <Delay wait={constants.DELAY_TIME}>
-          <Redirect to={constants.ROUTES.LOGIN} />
+          <Navigate to={constants.ROUTES.LOGIN} replace/>
         </Delay>
       )}
 

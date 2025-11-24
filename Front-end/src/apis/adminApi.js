@@ -1,4 +1,4 @@
-import axiosClient from './axiosClient-firt';
+import axiosClient from './axiosClient';
 
 const ADMIN_API_ENDPOINT = '/admin';
 
@@ -44,7 +44,8 @@ const adminApi = {
   // fn: lấy danh sách khách hàng
   getCustomerList: (page = 1) => {
     const url = ADMIN_API_ENDPOINT + '/customer';
-    return axiosClient.get(url, { params: page });
+    // SỬA: { params: { page } } thay vì { params: page }
+    return axiosClient.get(url, { params: { page } });
   },
 
   // fn: xoá 1 khách hàng

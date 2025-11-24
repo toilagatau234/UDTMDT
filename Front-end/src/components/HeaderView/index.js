@@ -180,7 +180,7 @@ function HeaderView() {
               closable={true}
               onClose={() => setDrawerVisible(false)}
               maskClosable={true}
-              visible={drawerVisible}>
+              open={drawerVisible}>
               <ul className="m-0">
                 <li className="m-b-18">
                   <Dropdown overlay={userActionMenu} placement="bottomLeft">

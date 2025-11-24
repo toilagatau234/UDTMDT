@@ -6,13 +6,8 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import AddressAddForm from './AddressAddForm';
 
-UserAddressList.defaultProps = {
-  isCheckout: false,
-  onChecked: function () {},
-};
-
-function UserAddressList(props) {
-  const { isCheckout, onChecked } = props;
+// SỬA: Đưa default props vào tham số hàm
+function UserAddressList({ isCheckout = false, onChecked = () => {} }) {
   const user = useSelector((state) => state.user);
   const [isVisibleForm, setIsVisibleForm] = useState(false);
   const [list, setList] = useState([]);
@@ -20,6 +15,7 @@ function UserAddressList(props) {
   const [updateList, setUpdateList] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
+  // ... (Phần logic còn lại giữ nguyên) ...
   // : xoá 1 địa chỉ giao nhận
   const onDelDeliveryAdd = async (item) => {
     try {
@@ -175,6 +171,8 @@ function UserAddressList(props) {
     </>
   );
 }
+
+// XÓA: UserAddressList.defaultProps
 
 UserAddressList.propTypes = {
   isCheckout: PropTypes.bool,

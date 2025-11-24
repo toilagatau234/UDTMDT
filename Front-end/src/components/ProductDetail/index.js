@@ -14,9 +14,10 @@ import ProductPolicy from './Policy';
 function ProductDetail(props) {
   const { products } = props;
   const { productDetail, productDesc } = products;
-  let { catalogs, ...restDetail } = productDetail;
-  const { name, brand, type, _id, rate, otherInfo } = products.product;
+  let { catalogs, ...restDetail } = productDetail || {};
+  const { name, brand, type, _id, rate, otherInfo } = products.product || {};
   restDetail = helpers.convertProductValue(type, restDetail);
+  
   // rendering...
   return (
     <div className="Product-Detail-View container m-t-20">

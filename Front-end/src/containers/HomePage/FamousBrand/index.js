@@ -50,7 +50,6 @@ const list = [
 ];
 
 // rendering ...
-function FamousBrand() {
   return (
     <div className="p-16 Famous-Brand">
       <Row gutter={[16, 16]}>
@@ -62,6 +61,6 @@ function FamousBrand() {
       </Row>
     </div>
   );
-}
+};
 
 export default FamousBrand;

@@ -11,7 +11,7 @@ function AddressAddForm(props) {
   const [provinceList, setProvinceList] = useState([]);
   const [districtList, setDistrictList] = useState([]);
   const [wardList, setWardList] = useState([]);
-  const [streetList, setStreetList] = useState([]);
+  // const [streetList, setStreetList] = useState([]); // Không cần dùng danh sách đường nữa
   const provinceId = useRef("");
   const formRef = useRef(null);
   const user = useSelector((state) => state.user);
@@ -24,9 +24,11 @@ function AddressAddForm(props) {
       try {
         const response = await addressApi.getProvince();
         if (response) {
-          if (isSubscribe) setProvinceList(response.data);
+          if (isSubscribe) setProvinceList(response.data || []);
         }
-      } catch (error) {}
+      } catch (error) {
+        if (isSubscribe) setProvinceList([]);
+      }
     }
     getProvinceList();
 
@@ -38,26 +40,30 @@ function AddressAddForm(props) {
     try {
       const response = await addressApi.getDistrict(provinceId);
       if (response) {
-        setDistrictList(response.data);
+        setDistrictList(response.data || []);
       }
     } catch (error) {
-      throw error;
+      setDistrictList([]);
     }
   };
 
-  // : lấy danh sách huyện/xã khi đã chọn tỉnh/thành
+  // : lấy danh sách phường/xã (đã bỏ phần lấy đường)
   const getWardStreetList = async (provinceId = 0, districtId) => {
     try {
       const response = await addressApi.getWardStreetList(
         provinceId,
         districtId
       );
-      if (response) {
-        setStreetList(response.data.streets);
-        setWardList(response.data.wards);
+      if (response && response.data) {
+        // setStreetList(response.data.streets || []); // Bỏ dòng này
+        setWardList(response.data.wards || []);
+      } else {
+        // setStreetList([]);
+        setWardList([]);
       }
     } catch (error) {
-      throw error;
+      // setStreetList([]);
+      setWardList([]);
     }
   };
 
@@ -177,16 +183,11 @@ function AddressAddForm(props) {
                 className="m-tb-12"
                 size="middle"
               >
-                {provinceList.map((item, index) => (
+                {Array.isArray(provinceList) && provinceList.map((item, index) => (
                   <Option value={item.id} key={index}>
                     {item.name}
                   </Option>
                 ))}
-                {/* {provinceList.map((item, index) => (
-                  <Option value={item.ID} key={index}>
-                     {item.Title}
-                  </Option>
-                ))} */}
               </Select>
             </Form.Item>
             {/* huyễn/ quận */}
@@ -207,7 +208,7 @@ function AddressAddForm(props) {
                 size="middle"
                 className="m-tb-12"
               >
-                {districtList.map((item, index) => (
+                {Array.isArray(districtList) && districtList.map((item, index) => (
                   <Option value={item.id} key={index}>
                     {item.name}
                   </Option>
@@ -225,44 +226,28 @@ function AddressAddForm(props) {
                   0
                 }
                 showSearch
-                onChange={(value) =>
-                  getWardStreetList(provinceId.current, value)
-                }
                 className="m-tb-12"
                 placeholder="Phường/Xã"
                 size="middle"
               >
-                {wardList.map((item, index) => (
+                {Array.isArray(wardList) && wardList.map((item, index) => (
                   <Option value={item.id} key={index}>
                     {item.prefix + " " + item.name}
                   </Option>
                 ))}
               </Select>
             </Form.Item>
-            {/* đường */}
+            {/* đường - ĐÃ SỬA THÀNH INPUT */}
             <Form.Item
               name="street"
               rules={[{ required: true, message: "Bắt buộc nhập *" }]}
             >
-              <Select
-                filterOption={(input, option) =>
-                  option.children.toLowerCase().indexOf(input.toLowerCase()) >=
-                  0
-                }
-                showSearch
-                onChange={(value) =>
-                  getWardStreetList(provinceId.current, value)
-                }
+              <Input
                 className="m-tb-12"
-                placeholder="Đường"
+                placeholder="Nhập tên đường"
                 size="middle"
-              >
-                {streetList.map((item, index) => (
-                  <Option value={item.id} key={index}>
-                    {item.prefix + " " + item.name}
-                  </Option>
-                ))}
-              </Select>
+                maxLength={100}
+              />
             </Form.Item>
             {/* chi tiết */}
             <Form.Item

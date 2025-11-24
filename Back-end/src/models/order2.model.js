@@ -57,6 +57,9 @@ const order2Schema = new Schema({
 
   // ghi chú cho đơn hàng
   note: { type: String, trim: true, maxlength: 200 },
+
+  couponCode: { type: String, default: null }, // Thêm dòng này
+  totalMoney: { type: Number },
 });
 
 const Order2Model = mongoose.model("order2", order2Schema, "orders2");

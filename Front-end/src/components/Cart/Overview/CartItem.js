@@ -1,31 +1,31 @@
 import { DeleteOutlined } from '@ant-design/icons';
-import { Avatar, InputNumber, Tooltip } from 'antd';
+// SỬA: Thêm Popconfirm vào import
+import { Avatar, InputNumber, Tooltip, Popconfirm } from 'antd'; 
 import helpers from 'helpers';
 import PropTypes from 'prop-types';
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 
-function CartItem(props) {
-  const {
-    _id,
-    name,
-    code,
-    avt,
-    stock,
-    discount,
-    price,
-    amount,
-    index,
-    onDelCartItem,
-    onUpdateNumOfProd,
-  } = props;
+// SỬA: Dùng default parameters thay cho defaultProps
+function CartItem({
+  _id = '',
+  name = '',
+  code = '',
+  avt = '',
+  stock = 0,
+  discount = 0,
+  price = 0,
+  amount = 1,
+  index,
+  onDelCartItem,
+  onUpdateNumOfProd,
+}) {
   
   return (
     <div className="d-flex bg-white p-12 bor-rad-4 justify-content-between">
       {/* sản phẩm */}
       <div className="d-flex flex-grow-1">
         <Avatar src={avt} alt="Photo" shape="square" size={80} />
-        {/* <div className="d-flex flex-direction-column p-10 "> */}
         <div
           className="d-flex flex-direction-column p-lr-8"
           style={{ maxWidth: 400 }}
@@ -39,8 +39,9 @@ function CartItem(props) {
         </div>
       </div>
 
-      {/*  Thêm giảm sản phẩm */}
+      {/* Thêm giảm sản phẩm */}
       <div className="d-flex align-i-center" style={{ flexBasis: 128 }}>
+        {/* Popconfirm bây giờ đã được định nghĩa */}
         <Popconfirm
           title="Bạn có chắc muốn xoá toàn bộ sản phẩm trong giỏ hàng ?"
           placement="bottom"
@@ -54,7 +55,6 @@ function CartItem(props) {
 
         <div>
           <InputNumber
-            height={20}
             min={1}
             max={stock}
             value={amount}
@@ -92,16 +92,7 @@ function CartItem(props) {
   );
 }
 
-CartItem.defaultProps = {
-  _id: '',
-  avt: '',
-  code: '',
-  discount: 0,
-  name: '',
-  price: 0,
-  stock: 0,
-  amount: 1,
-};
+// XÓA: CartItem.defaultProps
 
 CartItem.propTypes = {
   onDelCartItem: PropTypes.func,

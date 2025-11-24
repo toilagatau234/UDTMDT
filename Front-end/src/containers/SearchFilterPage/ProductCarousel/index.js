@@ -9,21 +9,23 @@ const list = [
 ];
 
 function ProductCarousel() {
-    const settings = {
-        autoplay: true,
-        infinite: true,
-        dots: true,
-        speed: 1000,
-        slidesToShow: 1,
-        slidesToScroll: 1,
-      };
-      return (
-        <Slider className="ProductCarousel p-t-20 " {...settings}>
-          {list.map((item, index) => (
-            <img className="ProductCarousel-img" src={item} alt={item} key={index} />
-          ))}
-        </Slider>
-      );
+  const settings = {
+    autoplay: true,
+    infinite: true,
+    dots: true,
+    speed: 1000,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+  };
+  
+  return (
+    // SỬA: Đổi Slider thành Carousel
+    <Carousel className="ProductCarousel p-t-20 " {...settings}>
+      {list.map((item, index) => (
+        <img className="ProductCarousel-img" src={item} alt={item} key={index} />
+      ))}
+    </Carousel>
+  );
 }
 
 export default ProductCarousel;

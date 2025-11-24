@@ -2,31 +2,23 @@ import { Input } from 'antd';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-InputField.defaultProps = {
-  type: 'text',
-  placeholder: '',
-  size: 'large',
-  suffix: null,
-  autocomplete: 'on',
-  autofocus: false,
-  maxLength: 1000,
-};
-
-function InputField(props) {
+// SỬA: Dùng React.forwardRef để component nhận được ref từ cha
+const InputField = React.forwardRef((props, ref) => {
+  // SỬA: Đưa defaultProps vào tham số mặc định
   const {
     field,
     form,
-    type,
-    placeholder,
-    size,
-    suffix,
+    type = 'text',
+    placeholder = '',
+    size = 'large',
+    suffix = null,
     className,
-    autocomplete,
-    autofocus,
-    ref,
-    maxLength,
+    autocomplete = 'on',
+    autofocus = false,
+    maxLength = 1000,
     ...rest
   } = props;
+
   const { name } = field;
   const { errors, touched } = form;
   const showError = errors[name] && touched[name];
@@ -36,7 +28,7 @@ function InputField(props) {
   return (
     <>
       <InputOption
-        ref={ref}
+        ref={ref} // Truyền ref vào Input của AntD
         className={showError ? className + ' error-input' : className}
         name={name}
         {...field}
@@ -51,7 +43,9 @@ function InputField(props) {
       {showError && <div className="show-error-input">{errors[name]}</div>}
     </>
   );
-}
+});
+
+// XÓA: InputField.defaultProps
 
 InputField.propTypes = {
   field: PropTypes.object.isRequired,
