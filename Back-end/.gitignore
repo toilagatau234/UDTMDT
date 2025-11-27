@@ -1,8 +1,0 @@
-node_modules
-yarn.lock
-yarn-error.log
-.env
-desktop.ini
-jsconfig.json
-.vscode
-debug.log
