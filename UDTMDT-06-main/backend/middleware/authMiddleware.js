@@ -53,4 +53,14 @@ const protect = async (req, res, next) => {
     }
 };
 
-module.exports = { protect };
+// --- Middleware kiểm tra quyền Admin ---
+const adminOnly = (req, res, next) => {
+    if (req.user && req.user.role === 'admin') {
+        next(); // Là admin, cho đi tiếp
+    } else {
+        res.status(403).json({ message: 'Không có quyền truy cập Admin' }); // Chặn lại
+    }
+};
+
+
+module.exports = { protect, adminOnly };

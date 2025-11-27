@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 // 1. Import Middleware xác thực
-const { protect } = require('../middleware/authMiddleware');
+const { protect, adminOnly} = require('../middleware/authMiddleware');
 
 // 2. Import Controller
 const OrderController = require('../controllers/OrderController');
@@ -21,5 +21,12 @@ router.get('/get-details-order/:id', protect, OrderController.getDetailsOrder);
 // 4. Hủy đơn hàng (Cần đăng nhập)
 // Đây là route để nút "Hủy đơn hàng" ở Frontend gọi vào
 router.delete('/cancel-order/:id', protect, OrderController.cancelOrderProduct);
+
+// --- ADMIN ROUTES ---
+// 1. Lấy tất cả đơn hàng
+router.get('/all-orders', protect, adminOnly, OrderController.getAllOrdersSystem);
+
+// 2. Cập nhật trạng thái
+router.put('/status/:id', protect, adminOnly, OrderController.updateOrderStatus);
 
 module.exports = router;

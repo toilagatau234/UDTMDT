@@ -115,7 +115,7 @@ const getDetailsOrder = async (req, res) => {
     }
 };
 
-// --- HÀM 4: cancelOrderProduct ---
+// --- HÀM 4: cancelOrderProduct (Chuẩn) ---
 const cancelOrderProduct = async (req, res) => {
     try {
         const orderId = req.params.id;
@@ -123,17 +123,20 @@ const cancelOrderProduct = async (req, res) => {
             return res.status(400).json({ status: 'ERR', message: 'Thiếu Order ID' });
         }
 
-        const order = await Order.findById(orderId);
-        if (!order) {
-             return res.status(404).json({ status: 'ERR', message: 'Không tìm thấy đơn hàng' });
-        }
+        const updatedOrder = await Order.findByIdAndUpdate(
+            orderId, 
+            { isCancelled: true }, // Lưu ý: Model phải có trường này nếu muốn lưu
+            { new: true }
+        );
 
-        // Xóa đơn hàng
-        await Order.findByIdAndDelete(orderId);
+        if (!updatedOrder) {
+            return res.status(404).json({ status: 'ERR', message: 'Không tìm thấy đơn hàng' });
+        }
 
         return res.status(200).json({
             status: 'OK',
             message: 'Hủy đơn hàng thành công',
+            data: updatedOrder
         });
     } catch (e) {
         return res.status(500).json({
@@ -144,9 +147,97 @@ const cancelOrderProduct = async (req, res) => {
     }
 };
 
+// --- ADMIN ---
+// --- LẤY TẤT CẢ ĐƠN HÀNG ---
+const getAllOrdersSystem = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const search = req.query.search || '';
+        const status = req.query.status;
+
+        let query = {};
+        
+        // Lọc theo trạng thái nếu có
+        if (status) {
+            query.status = status;
+        }
+
+        // Tìm kiếm (Đơn giản hóa: tìm theo ID đơn hàng hoặc tên người nhận)
+        // Lưu ý: Tìm theo nested field (shippingAddress.fullName) cần aggregate hoặc logic phức tạp hơn, 
+        // ở đây tạm thời tìm theo _id nếu search có dạng ObjectId, hoặc bỏ qua nếu khó.
+        // Để đơn giản cho bước này, ta chưa apply search phức tạp.
+
+        const totalOrders = await Order.countDocuments(query);
+        const orders = await Order.find(query)
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * limit)
+            .limit(limit);
+
+        res.status(200).json({
+            status: 'OK',
+            message: 'Lấy danh sách đơn hàng thành công',
+            data: orders,
+            total: totalOrders,
+            currentPage: page,
+            totalPages: Math.ceil(totalOrders / limit)
+        });
+    } catch (e) {
+        res.status(500).json({ message: 'Lỗi server', error: e.message });
+    }
+};
+
+// --- CẬP NHẬT TRẠNG THÁI ĐƠN HÀNG ---
+const updateOrderStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        if (!status) {
+            return res.status(400).json({ message: 'Thiếu trạng thái mới' });
+        }
+
+        const order = await Order.findById(id);
+        if (!order) {
+            return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
+        }
+
+        order.status = status;
+        
+        // Tự động cập nhật isDelivered nếu status là Delivered
+        if (status === 'Delivered') {
+            order.isDelivered = true;
+            order.deliveredAt = Date.now();
+        }
+
+        await order.save();
+
+        res.status(200).json({ status: 'OK', message: 'Cập nhật thành công', data: order });
+    } catch (e) {
+        res.status(500).json({ message: 'Lỗi server', error: e.message });
+    }
+};
+
+// --- LẤY CHI TIẾT ĐƠN HÀNG ---
+const getDetailsOrderAdmin = async (req, res) => {
+    try {
+        const orderId = req.params.id;
+        const order = await Order.findById(orderId).populate('user', 'name email');
+        if (!order) {
+            return res.status(404).json({ status: 'ERR', message: 'Không tìm thấy đơn hàng' });
+        }
+        return res.status(200).json({ status: 'OK', data: order });
+    } catch (e) {
+        return res.status(500).json({ status: 'ERR', message: 'Lỗi server', error: e.message });
+    }
+};
+
 module.exports = { 
     createOrder,
     getAllOrder,
     getDetailsOrder,
-    cancelOrderProduct
+    cancelOrderProduct,
+    getAllOrdersSystem,
+    updateOrderStatus,
+    getDetailsOrderAdmin,
 };

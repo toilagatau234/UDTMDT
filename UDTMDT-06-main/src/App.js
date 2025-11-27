@@ -1,7 +1,6 @@
 import React, { Fragment } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import DefaultComponent from './components/DefaultComponent/DefaultComponent'
-import AdminApp from './admin_pages/AdminApp'
 // import { AuthProvider } from './admin_pages/context/AuthContext' // Nếu cần thì bỏ comment
 import 'antd/dist/reset.css'
 
@@ -23,9 +22,11 @@ import MyOrdersPage from './pages/MyOrdersPage/MyOrdersPage'
 import ChangePasswordPage from './pages/ChangePasswordPage/ChangePasswordPage'
 import SearchPage from './pages/SearchPage/SearchPage'
 import NotFoundPage from './pages/NotFoundPage/NotFoundPage'
+import AdminApp from './admin_pages/AdminApp'
 
 // === 👇 MỚI THÊM: Import trang OrderSuccess ===
 import OrderSuccessPage from './pages/OrderSuccessPage/OrderSuccessPage'
+
 // ===========================================
 
 // 2. Định nghĩa các routes

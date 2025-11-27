@@ -7,7 +7,7 @@ import {
   WrapperInputStyle,
   WrapperButtonStyle
 } from './style'
-import { useNavigate, useLocation } from 'react-router-dom' 
+import { useNavigate, useLocation } from 'react-router-dom'
 import axios from 'axios'
 import { message } from 'antd'
 import { useDispatch } from 'react-redux';
@@ -18,7 +18,7 @@ const SignInPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
   const dispatch = useDispatch()
-  
+
   const [showPassword, setShowPassword] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -39,45 +39,49 @@ const SignInPage = () => {
 
     try {
       const response = await axios.post(
-        'http://localhost:8080/api/users/login',
+        'http://localhost:8080/api/user/login', 
         { email, password }
       )
 
       if (response.data && (response.data.token || response.data.access_token)) {
         message.success('Đăng nhập thành công!')
-        
+
         if (response.data.user) {
-            localStorage.setItem('user', JSON.stringify(response.data.user))
+          localStorage.setItem('user', JSON.stringify(response.data.user))
         }
         const token = response.data.token || response.data.access_token;
-        localStorage.setItem('access_token', token) 
+        localStorage.setItem('access_token', token)
 
-        // --- LẤY GIỎ HÀNG CŨ TỪ SERVER ---
         try {
-            const cartRes = await axiosClient.get('/api/users/get-cart');
-            if (cartRes.data.success) {
-                dispatch(setCart(cartRes.data.cartItems));
-            }
+          const cartRes = await axiosClient.get('/api/user/get-cart'); 
+          if (cartRes.data.success) {
+            dispatch(setCart(cartRes.data.cartItems));
+          }
         } catch (e) {
-            console.log('Chưa có giỏ hàng cũ hoặc lỗi');
+          console.log('Chưa có giỏ hàng cũ hoặc lỗi');
         }
 
         // --- ĐIỀU HƯỚNG ---
         if (location.state && location.state.from) {
-            navigate(location.state.from);
+          navigate(location.state.from);
         } else if (location.state && typeof location.state === 'string') {
-             navigate(location.state);
+          navigate(location.state);
         } else {
-            navigate('/');
+          navigate('/');
         }
       } else {
         message.error('Lỗi đăng nhập: Không nhận được dữ liệu người dùng.')
       }
     } catch (error) {
-      console.error('Lỗi đăng nhập:', error)
-      message.error(error.response?.data?.message || 'Sai tài khoản hoặc mật khẩu.')
+      // Xử lý tài khoản bị khóa
+      if (error.response && error.response.status === 403 && error.response.data.isBlocked) {
+        navigate('/account-locked');
+      } else {
+        console.error('Lỗi đăng nhập:', error)
+        message.error(error.response?.data?.message || 'Sai tài khoản hoặc mật khẩu.')
+      }
     }
-  }
+  };
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#ccc', height: '100vh' }}>

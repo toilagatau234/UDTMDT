@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const { protect: auth } = require('../middleware/authMiddleware.js'); 
+const { protect: auth, adminOnly } = require('../middleware/authMiddleware.js'); 
 
 const {
     registerUser,
     loginUser,
+    loginAdmin,
     getUserProfile,
     updateUserProfile,
     forgotPassword,
@@ -16,7 +17,13 @@ const {
     updateAddress,
     removeAddress,
     updateCart,
-    getCart
+    getCart,
+    getAllUsers,
+    deleteUser,
+    toggleBlockUser,
+    createUser,
+    getDetailsUser, 
+    updateUser,
 } = require('../controllers/userController');
 
 // --- KHÔNG CẦN ĐĂNG NHẬP ---
@@ -24,6 +31,7 @@ router.post('/register', registerUser);
 router.post('/login', loginUser);
 router.post('/forgot-password', forgotPassword);
 router.post('/reset-password/:token', resetPassword);
+router.post('/admin-login', loginAdmin);
 
 // --- CẦN ĐĂNG NHẬP (PROFILE) ---
 router.get('/profile', auth, getUserProfile);
@@ -42,5 +50,24 @@ router.delete('/wishlist/:productId', auth, removeFromWishlist);
 // --- GIỎ HÀNG ---
 router.put('/update-cart', auth, updateCart);
 router.get('/get-cart', auth, getCart);
+
+// --- ADMIN ROUTES ---
+// Lấy danh sách users (Admin mới xem được)
+router.get('/all-users', auth, adminOnly, getAllUsers);
+
+// Toggle Block User
+router.put('/toggle-block/:id', auth, adminOnly, toggleBlockUser);
+
+// Xóa User
+router.delete('/:id', auth, adminOnly, deleteUser);
+
+// Tạo User mới
+router.post('/create', auth, adminOnly, createUser);
+
+// Lấy chi tiết User
+router.get('/get-details/:id', auth, adminOnly, getDetailsUser);
+
+// Cập nhật User (Admin sửa)
+router.put('/update/:id', auth, adminOnly, updateUser);
 
 module.exports = router;
