@@ -38,8 +38,9 @@ const SignInPage = () => {
     }
 
     try {
+      // --- SỬA LỖI TẠI ĐÂY: Thêm 's' vào 'users' ---
       const response = await axios.post(
-        'http://localhost:8080/api/user/login', 
+        'http://localhost:8080/api/users/login', 
         { email, password }
       )
 
@@ -53,7 +54,8 @@ const SignInPage = () => {
         localStorage.setItem('access_token', token)
 
         try {
-          const cartRes = await axiosClient.get('/api/user/get-cart'); 
+          // --- SỬA LUÔN CẢ ĐƯỜNG DẪN LẤY GIỎ HÀNG ---
+          const cartRes = await axiosClient.get('/api/users/get-cart'); 
           if (cartRes.data.success) {
             dispatch(setCart(cartRes.data.cartItems));
           }

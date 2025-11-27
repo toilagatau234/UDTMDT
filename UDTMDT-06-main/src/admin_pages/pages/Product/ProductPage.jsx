@@ -225,7 +225,7 @@ const ProductPage = () => {
                               {product.name}
                             </td>
                             <td>
-                              {product.category?.name || <span className="text-muted">N/A</span>}
+                              {product.category?.name || 'N/A'}
                             </td>
                             <td>{formatCurrency(price)}</td>
                             <td>{stock}</td>

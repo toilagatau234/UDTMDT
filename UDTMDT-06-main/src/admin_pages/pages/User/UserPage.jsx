@@ -23,7 +23,7 @@ const UserPage = () => {
     try {
       setLoading(true);
       const params = { page, limit, search };
-      const response = await apiService.get('/user/all-users', { params });
+      const response = await apiService.get('/users/all-users', { params });
       
       setUsers(response.data.users || []);
       setTotalPages(response.data.totalPages || 1);
@@ -52,7 +52,7 @@ const UserPage = () => {
     const newBlockedStatus = !user.isBlocked;
     const toastId = toast.loading('Đang cập nhật...');
     try {
-      await apiService.put(`/user/toggle-block/${user._id}`, { isBlocked: newBlockedStatus });
+      await apiService.put(`/users/toggle-block/${user._id}`, { isBlocked: newBlockedStatus });
       toast.success('Thành công!', { id: toastId });
       setUsers(users.map(u => u._id === user._id ? { ...u, isBlocked: newBlockedStatus } : u));
     } catch (error) {
@@ -63,7 +63,7 @@ const UserPage = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Bạn có chắc muốn xóa user này?')) {
        try {
-          await apiService.delete(`/user/${id}`);
+          await apiService.delete(`/users/${id}`);
           toast.success('Xóa thành công');
           fetchUsers(currentPage, searchTerm);
        } catch (error) {

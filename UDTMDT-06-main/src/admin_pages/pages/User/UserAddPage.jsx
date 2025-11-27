@@ -30,7 +30,7 @@ const UserAddPage = () => {
 
     setLoading(true);
     try {
-      await apiService.post('/user/create', formData);
+      await apiService.post('/users/create', formData);
       toast.success('Tạo user thành công!');
       navigate('/admin/users'); // Chuyển về danh sách user
     } catch (error) {

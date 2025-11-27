@@ -164,6 +164,7 @@ const HeaderComponent = () => {
                 src={item.image}
                 alt={item.name}
                 style={{ width: '50px', height: '50px', objectFit: 'cover' }}
+                onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/50"; }}
               />
               <div
                 style={{
@@ -233,6 +234,7 @@ const HeaderComponent = () => {
                         src={imageUrl}
                         alt={product.name}
                         style={{ width: '40px', height: '40px', objectFit: 'contain' }}
+                        onError={(e) => { e.target.onerror = null; e.target.src = "https://via.placeholder.com/40"; }}
                     />
                     <span
                         style={{
@@ -314,7 +316,7 @@ const HeaderComponent = () => {
             }}
           >
             {isLoggedIn ? (
-              <Dropdown overlay={menu} trigger={['hover']}>
+              <Dropdown popupRender={() => menu} trigger={['hover']}>
                 <WrapperHeaderAccount style={{ cursor: 'pointer' }}>
                   <UserOutlined style={{ fontSize: '30px', color: '#fff' }} />
                   <WrapperTextHeaderSmall

@@ -51,12 +51,12 @@ const ProductEditPage = () => {
     flashSalePrice: 0,
   });
   const [variants, setVariants] = useState([]);
-  
+
   // Quản lý ảnh:
   const [existingImages, setExistingImages] = useState([]); // Ảnh cũ (URLs)
   const [newImages, setNewImages] = useState([]); // Ảnh mới (Files)
   const [newImagePreviews, setNewImagePreviews] = useState([]); // Previews cho ảnh mới
-  
+
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
 
@@ -79,29 +79,39 @@ const ProductEditPage = () => {
       try {
         setPageLoading(true);
         const response = await apiService.get(`/products/${id}`);
-        const product = response.data;
-        
+
+        // Backend trả về { data: product } (theo code controller mới sửa ở trên)
+        const product = response.data.data || response.data;
+
         setFormData({
-          name: product.name,
-          description: product.description,
-          price: product.price,
-          category: product.category._id, // API trả về category object
+          name: product.name || '',
+          description: product.description || '',
+          price: product.price || 0,
+          // Kiểm tra product.category có tồn tại không và lấy _id
+          category: product.category?._id || product.category || '', // Get ID from object
           isFlashSale: product.isFlashSale || false,
           flashSalePrice: product.flashSalePrice || 0,
+          status: product.status || 'in_stock' // Load status
         });
-        setVariants(product.variants || []);
-        setExistingImages(product.images || []);
-        
+
+        // Backend gọi là 'variations', Frontend state gọi là 'variants'
+        setVariants(product.variations || []);
+
+        // Xử lý ảnh (Backend lưu object {url:..} hoặc string)
+        const imgs = product.images ? product.images.map(img => img.url || img) : [];
+        setExistingImages(imgs);
+
       } catch (error) {
+        console.error("Lỗi tải SP:", error);
         toast.error('Không thể tải dữ liệu sản phẩm.');
         navigate('/admin/products');
       } finally {
         setPageLoading(false);
       }
     };
-    fetchProduct();
+    if (id) fetchProduct();
   }, [id, navigate]);
-  
+
   // Xử lý thay đổi form
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -115,16 +125,16 @@ const ProductEditPage = () => {
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     setNewImages(prev => [...prev, ...files]);
-    
+
     const previews = files.map(file => URL.createObjectURL(file));
     setNewImagePreviews(prev => [...prev, ...previews]);
   };
-  
+
   // Xóa ảnh CŨ (existing)
   const removeExistingImage = (index) => {
     setExistingImages(existingImages.filter((_, i) => i !== index));
   };
-  
+
   // Xóa ảnh MỚI (preview)
   const removeNewImage = (index) => {
     setNewImages(newImages.filter((_, i) => i !== index));
@@ -155,18 +165,18 @@ const ProductEditPage = () => {
 
     setLoading(true);
     const data = new FormData();
-    
+
     // Append fields
     Object.keys(formData).forEach(key => {
       data.append(key, formData[key]);
     });
-    
+
     // Append variants
     data.append('variants', JSON.stringify(variants));
-    
+
     // Append existing images (URLs)
     data.append('existingImages', JSON.stringify(existingImages));
-    
+
     // Append new images (Files)
     newImages.forEach(imageFile => {
       data.append('images', imageFile); // API sẽ nhận 'images' là mảng file mới
@@ -179,7 +189,7 @@ const ProductEditPage = () => {
         },
       });
       toast.success('Cập nhật sản phẩm thành công!');
-      navigate('/products');
+      navigate('/admin/products');
     } catch (error) {
       console.error('Failed to update product:', error);
     } finally {
@@ -203,55 +213,55 @@ const ProductEditPage = () => {
       </ProductHeader>
 
       <form onSubmit={handleSubmit}>
-            {/* Basic Info */}
-            <div className="card">
-              <div className="card-body">
-                <div className="row">
-                  <div className="col-md-6"><div className="form-group"><label>Product Name</label><input type="text" name="name" className="form-control" value={formData.name} onChange={handleChange} required /></div></div>
-                  <div className="col-md-6"><div className="form-group"><label>Category</label><select name="category" className="form-select" value={formData.category} onChange={handleChange} required>{categories.map(cat => (<option key={cat._id} value={cat._id}>{cat.name}</option>))}</select></div></div>
-                  <div className="col-12"><div className="form-group"><label>Description</label><textarea name="description" className="form-control" rows="4" value={formData.description} onChange={handleChange}></textarea></div></div>
-                  <div className="col-md-6"><div className="form-group"><label>Default Price</label><input type="number" name="price" className="form-control" value={formData.price} onChange={handleChange} required min="0" /></div></div>
-                  <div className="col-md-6">
-                    <div className="form-group"><label>Flash Sale Price</label><input type="number" name="flashSalePrice" className="form-control" value={formData.flashSalePrice} onChange={handleChange} min="0" /></div>
-                    <div className="form-check"><input type="checkbox" name="isFlashSale" className="form-check-input" checked={formData.isFlashSale} onChange={handleChange} /><label className="form-check-label">Is Flash Sale?</label></div>
-                  </div>
-                </div>
+        {/* Basic Info */}
+        <div className="card">
+          <div className="card-body">
+            <div className="row">
+              <div className="col-md-6"><div className="form-group"><label>Product Name</label><input type="text" name="name" className="form-control" value={formData.name} onChange={handleChange} required /></div></div>
+              <div className="col-md-6"><div className="form-group"><label>Category</label><select name="category" className="form-select" value={formData.category} onChange={handleChange} required>{categories.map(cat => (<option key={cat._id} value={cat._id}>{cat.name}</option>))}</select></div></div>
+              <div className="col-12"><div className="form-group"><label>Description</label><textarea name="description" className="form-control" rows="4" value={formData.description} onChange={handleChange}></textarea></div></div>
+              <div className="col-md-6"><div className="form-group"><label>Default Price</label><input type="number" name="price" className="form-control" value={formData.price} onChange={handleChange} required min="0" /></div></div>
+              <div className="col-md-6">
+                <div className="form-group"><label>Flash Sale Price</label><input type="number" name="flashSalePrice" className="form-control" value={formData.flashSalePrice} onChange={handleChange} min="0" /></div>
+                <div className="form-check"><input type="checkbox" name="isFlashSale" className="form-check-input" checked={formData.isFlashSale} onChange={handleChange} /><label className="form-check-label">Is Flash Sale?</label></div>
               </div>
             </div>
-            
-            {/* Variants */}
-            <VariantManager variants={variants} setVariants={setVariants} />
+          </div>
+        </div>
 
-            {/* Image Upload */}
-            <div className="card">
-              <div className="card-header"><h5 className="card-title">Product Images</h5></div>
-              <div className="card-body">
-                <input type="file" className="form-control" onChange={handleImageChange} multiple accept="image/*" />
-                <div className="mt-3 d-flex flex-wrap">
-                  {/* Ảnh cũ */}
-                  {existingImages.map((imageUrl, index) => (
-                    <div key={`existing-${index}`} className="position-relative me-2 mb-2" style={{ width: '100px', height: '100px' }}>
-                      <img src={imageUrl} alt="existing" className="img-thumbnail" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      <button type="button" className="btn btn-danger btn-sm position-absolute" style={{ top: 0, right: 0 }} onClick={() => removeExistingImage(index)}><i className="fas fa-times"></i></button>
-                    </div>
-                  ))}
-                  {/* Ảnh mới (preview) */}
-                  {newImagePreviews.map((previewUrl, index) => (
-                    <div key={`new-${index}`} className="position-relative me-2 mb-2" style={{ width: '100px', height: '100px' }}>
-                      <img src={previewUrl} alt="preview" className="img-thumbnail" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      <button type="button" className="btn btn-danger btn-sm position-absolute" style={{ top: 0, right: 0 }} onClick={() => removeNewImage(index)}><i className="fas fa-times"></i></button>
-                    </div>
-                  ))}
+        {/* Variants */}
+        <VariantManager variants={variants} setVariants={setVariants} />
+
+        {/* Image Upload */}
+        <div className="card">
+          <div className="card-header"><h5 className="card-title">Product Images</h5></div>
+          <div className="card-body">
+            <input type="file" className="form-control" onChange={handleImageChange} multiple accept="image/*" />
+            <div className="mt-3 d-flex flex-wrap">
+              {/* Ảnh cũ */}
+              {existingImages.map((imageUrl, index) => (
+                <div key={`existing-${index}`} className="position-relative me-2 mb-2" style={{ width: '100px', height: '100px' }}>
+                  <img src={imageUrl} alt="existing" className="img-thumbnail" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <button type="button" className="btn btn-danger btn-sm position-absolute" style={{ top: 0, right: 0 }} onClick={() => removeExistingImage(index)}><i className="fas fa-times"></i></button>
                 </div>
-              </div>
+              ))}
+              {/* Ảnh mới (preview) */}
+              {newImagePreviews.map((previewUrl, index) => (
+                <div key={`new-${index}`} className="position-relative me-2 mb-2" style={{ width: '100px', height: '100px' }}>
+                  <img src={previewUrl} alt="preview" className="img-thumbnail" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <button type="button" className="btn btn-danger btn-sm position-absolute" style={{ top: 0, right: 0 }} onClick={() => removeNewImage(index)}><i className="fas fa-times"></i></button>
+                </div>
+              ))}
             </div>
+          </div>
+        </div>
 
-            {/* Submit */}
-            <div className="text-end mb-4">
-              <button type="submit" className="btn btn-primary" disabled={loading}>
-                {loading ? <span className="spinner-border spinner-border-sm"></span> : 'Save Changes'}
-              </button>
-            </div>
+        {/* Submit */}
+        <div className="text-end mb-4">
+          <button type="submit" className="btn btn-primary" disabled={loading}>
+            {loading ? <span className="spinner-border spinner-border-sm"></span> : 'Save Changes'}
+          </button>
+        </div>
       </form>
     </ProductWrapper>
   );

@@ -1,52 +1,71 @@
-// models/Product.js
 const mongoose = require('mongoose');
 
-// --- SCHEMA SẢN PHẨM ---
 const productSchema = new mongoose.Schema({
-    name: {              // Tên sản phẩm
+    name: {
         type: String,
         required: true
     },
-    images: {            // Mảng ảnh sản phẩm
+    images: {
         type: Array,
+        required: true,
+        default: []
+    }, // Stores image URLs
+    category: {
+        type: mongoose.Schema.Types.ObjectId, // MUST be ObjectId to link with Category
+        ref: 'Category',
         required: true
     },
-    category: {          // ID hoặc tên danh mục
-        type: String
+    brand: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'Brand' 
     },
-    brand: {             // ID hoặc tên thương hiệu
-        type: String
-    },
-    price: {             // Giá gốc
+    price: { 
         type: Number,
-        required: true
+        required: true, 
+        default: 0 
     },
-    salePrice: {         // Giá sale (nếu có)
-        type: Number
+    salePrice: { 
+        type: Number, 
+        default: 0 },
+    countInStock: { 
+        type: Number, 
+        required: true, 
+        default: 0 
     },
-    stockQuantity: {     // Số lượng trong kho
-        type: Number,
-        required: true
+    description: { 
+        type: String 
     },
-    description: {       // Mô tả sản phẩm
-        type: String
+    slug: { 
+        type: String 
     },
-    slug: {              // Slug dùng URL
-        type: String
+    status: { 
+        type: String, 
+        default: 'in_stock' 
+    }, // Fix status not saving
+    isFlashSale: { 
+        type: Boolean, 
+        default: false 
     },
-    sku: {               // Mã sản phẩm
-        type: String
+    flashSalePrice: { 
+        type: Number, 
+        default: 0 
     },
-    status: {            // Trạng thái: in_stock, out_of_stock
-        type: String,
-        default: 'in_stock'
-    },
-    isOnSale: {          // Có đang sale hay không
-        type: Boolean,
-        default: false
-    }
-}, { timestamps: true }); // createdAt, updatedAt tự động
 
-// --- TẠO VÀ EXPORT MODEL 'Product' ---
+    // --- ADD THIS FIELD TO STORE VARIANTS ---
+    variations: [
+        {
+            color: { type: String },
+            size: { type: String },
+            quantity: { type: Number, default: 0 },
+            price: { type: Number, default: 0 }
+        }
+    ],
+    // ----------------------------------------
+    user: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'User' 
+    }
+}, { timestamps: true });
+
 const Product = mongoose.model('Product', productSchema);
 module.exports = Product;
