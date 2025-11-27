@@ -6,7 +6,7 @@ const ProtectedRoutes = () => {
   const { isAuthenticated } = useAuth();
 
   // If authenticated, allow nested routes to render (AdminLayout will be used as a wrapper in routes)
-  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
+  return isAuthenticated ? <Outlet /> : <Navigate to="/admin/login" replace />;
 };
 
 export default ProtectedRoutes;

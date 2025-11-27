@@ -1,34 +1,18 @@
 import React, { useEffect, useRef } from 'react';
 
 /**
- * Component Modal tái sử dụng, tích hợp Bootstrap 5 JS
- * @param {object} props
- * @param {string} props.id - ID duy nhất cho modal
- * @param {string} props.title - Tiêu đề của modal
- * @param {React.ReactNode} props.children - Nội dung (body) của modal
- * @param {React.ReactNode} props.footer - Nội dung (footer) của modal
- * @param {function} props.onClose - Hàm được gọi khi modal đóng
- * @param {boolean} props.show - State (true/false) để điều khiển đóng/mở modal
+ * Component Modal tái sử dụng (Đã fix lỗi ref null)
  */
 const Modal = ({ id, title, children, footer, show, onClose }) => {
-  const modalRef = useRef(null);
+  const modalRef = useRef(null); // Dùng ref để lấy element thay vì getElementById
 
   useEffect(() => {
-    if (!modalRef.current) {
+    const modalElement = modalRef.current;
+    if (!modalElement) return; // Nếu chưa có element thì dừng ngay
 
-      modalRef.current = document.getElementById(id);
-      
-      // Thêm listener 'hidden.bs.modal' (khi modal đã đóng hoàn toàn)
-      modalRef.current.addEventListener('hidden.bs.modal', () => {
-        if (onClose) {
-          onClose();
-        }
-      });
-    }
-
-    // Lấy instance của Bootstrap Modal
+    // Lấy hoặc tạo instance Bootstrap Modal
     // eslint-disable-next-line no-undef
-    const bsModal = bootstrap.Modal.getOrCreateInstance(modalRef.current);
+    const bsModal = bootstrap.Modal.getOrCreateInstance(modalElement);
 
     if (show) {
       bsModal.show();
@@ -36,10 +20,29 @@ const Modal = ({ id, title, children, footer, show, onClose }) => {
       bsModal.hide();
     }
 
-  }, [id, show, onClose]);
+    // Hàm xử lý khi modal đóng
+    const handleHidden = () => {
+      if (onClose) onClose();
+    };
+
+    // Lắng nghe sự kiện đóng
+    modalElement.addEventListener('hidden.bs.modal', handleHidden);
+
+    // Cleanup: Gỡ sự kiện khi component unmount hoặc props thay đổi
+    return () => {
+      modalElement.removeEventListener('hidden.bs.modal', handleHidden);
+    };
+  }, [show, onClose]);
 
   return (
-    <div className="modal fade" id={id} tabIndex="-1" aria-labelledby={`${id}Label`} aria-hidden="true">
+    <div 
+      className="modal fade" 
+      id={id} 
+      ref={modalRef} // QUAN TRỌNG: Gắn ref vào đây
+      tabIndex="-1" 
+      aria-labelledby={`${id}Label`} 
+      aria-hidden="true"
+    >
       <div className="modal-dialog modal-dialog-centered">
         <div className="modal-content">
           <div className="modal-header">
@@ -48,7 +51,7 @@ const Modal = ({ id, title, children, footer, show, onClose }) => {
               type="button"
               className="btn-close"
               aria-label="Close"
-              onClick={() => onClose()} // Yêu cầu đóng modal
+              onClick={() => onClose && onClose()}
             ></button>
           </div>
           <div className="modal-body">

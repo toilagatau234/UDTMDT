@@ -25,6 +25,32 @@ export const ProductWrapper = styled(AdminPageWrapper)`
             font-size: 14px;
         }
     }
+
+    .table {
+        td {
+            vertical-align: middle; /* Căn giữa theo chiều dọc */
+        }
+    }
+
+    .product-item {
+        display: flex;
+        align-items: center;
+
+        img {
+            width: 70px;          /* Kích thước cố định */
+            height: 70px;         /* Kích thước cố định */
+            object-fit: cover;    /* Chống méo ảnh */
+            border-radius: 6px;   /* Bo góc */
+            border: 1px solid #eee; /* Viền nhẹ */
+            margin-right: 15px;   /* Khoảng cách với tên */
+            background-color: #f9f9f9; /* Màu nền dự phòng */
+        }
+
+        span {
+            font-weight: 500;
+            color: #333;
+        }
+    }
 `;
 
 export const ProductHeader = styled.div`

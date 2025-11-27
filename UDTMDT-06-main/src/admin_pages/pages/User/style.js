@@ -25,6 +25,34 @@ export const UserWrapper = styled(AdminPageWrapper)`
             font-size: 14px;
         }
     }
+
+    .table {
+        td {
+            vertical-align: middle; /* Căn giữa nội dung theo chiều dọc */
+        }
+    }
+
+    .user-item {
+        display: flex;
+        align-items: center;
+        gap: 12px; /* Khoảng cách giữa ảnh và tên */
+
+        img {
+            width: 40px;          /* Kích thước avatar nhỏ gọn */
+            height: 40px;
+            border-radius: 50%;   /* Bo tròn hoàn toàn */
+            object-fit: cover;    /* Chống méo ảnh */
+            border: 1px solid #eee;
+            background-color: #f1f1f1;
+        }
+
+        .user-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+            line-height: 1.2;
+        }
+    }
 `;
 
 export const UserPageHeader = styled.div`

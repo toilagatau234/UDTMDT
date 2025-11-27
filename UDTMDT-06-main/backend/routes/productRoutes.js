@@ -1,22 +1,19 @@
 const express = require('express');
 const router = express.Router();
 
-// --- 1. IMPORT ---
-// Import middleware (tự động xử lý dù export kiểu nào cũng nhận được)
-const { authMiddleware, adminOnly } = require('../middleware/authMiddleware');
-const protect = authMiddleware.protect ? authMiddleware.protect : authMiddleware;
+// --- 1. IMPORT MIDDLEWARE (ĐÃ SỬA) ---
+// Import trực tiếp 'protect' và 'adminOnly' từ file authMiddleware
+const { protect, adminOnly } = require('../middleware/authMiddleware');
 
 // Import Controller
 const productController = require('../controllers/productController.js');
 const upload = require('../middleware/uploadMiddleware'); 
 
-
-// --- 2. LẤY HÀM (Destructuring) ---
-// Lấy các hàm cũ và hàm mới từ Controller
+// --- 2. LẤY HÀM TỪ CONTROLLER ---
 const { 
-    getAllProducts,     // Hàm cũ
-    getProductDetails,  // Hàm cũ
-    addToWishlist,      // Hàm MỚI
+    getAllProducts,     
+    getProductDetails,  
+    addToWishlist,      
     createProduct,
     updateProduct,
     deleteProduct
@@ -24,21 +21,21 @@ const {
 
 // --- 3. KHAI BÁO ROUTE ---
 
-// --- ROUTE MỚI: Thêm vào yêu thích (Method POST) ---
-// (Tôi thêm kiểm tra 'if' để nếu lỡ Controller chưa lưu kịp thì server không bị sập)
+// --- ROUTE YÊU THÍCH ---
 if (typeof addToWishlist === 'function') {
     router.post('/add-to-wishlist/:id', protect, addToWishlist);
 } else {
-    console.log("⚠️ CẢNH BÁO: Server chưa tìm thấy hàm 'addToWishlist'. Hãy kiểm tra lại file ProductController.");
+    console.log("⚠️ CẢNH BÁO: Server chưa tìm thấy hàm 'addToWishlist'.");
 }
 
-// --- CÁC ROUTE CŨ (GIỮ NGUYÊN KHÔNG ĐỤNG CHẠM) ---
+// --- CÁC ROUTE CÔNG KHAI (AI CŨNG XEM ĐƯỢC) ---
 router.get('/', getAllProducts);
 router.get('/:id', getProductDetails);
 
-// --- ADMIN ROUTES (Cần thiết để sửa lỗi 404) ---
-router.post('/', authMiddleware, adminOnly, upload.array('images', 10), createProduct);
-router.put('/:id', authMiddleware, adminOnly, upload.array('images', 10), updateProduct);
-router.delete('/:id', authMiddleware, adminOnly, deleteProduct);
+// --- CÁC ROUTE ADMIN (CHỈ ADMIN MỚI ĐƯỢC DÙNG) ---
+// Lưu ý: Thay 'authMiddleware' bằng 'protect'
+router.post('/', protect, adminOnly, upload.array('images', 10), createProduct);
+router.put('/:id', protect, adminOnly, upload.array('images', 10), updateProduct);
+router.delete('/:id', protect, adminOnly, deleteProduct);
 
 module.exports = router;

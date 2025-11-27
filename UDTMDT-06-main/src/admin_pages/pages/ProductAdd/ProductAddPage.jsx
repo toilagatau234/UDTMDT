@@ -163,7 +163,7 @@ const ProductAddPage = () => {
         },
       });
       toast.success('Thêm sản phẩm thành công!');
-      navigate('/products');
+      navigate('/admin/products');
     } catch (error) {
       console.error('Failed to add product:', error);
     } finally {

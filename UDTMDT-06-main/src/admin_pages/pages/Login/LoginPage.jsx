@@ -12,25 +12,26 @@ import {
 } from './style';
 
 const LoginPage = () => {
-  const [username, setUsername] = useState('');
+  // SỬA 1: Đổi tên state từ username -> email
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  
   const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!username || !password) {
-      toast.error('Vui lòng nhập tên đăng nhập và mật khẩu');
+    if (!email || !password) { // SỬA 2: Kiểm tra email
+      toast.error('Vui lòng nhập email và mật khẩu');
       return;
     }
     setLoading(true);
     try {
-      // Gọi hàm login từ AuthContext
-      await login(username, password);
-      // AuthContext sẽ tự động xử lý chuyển hướng khi thành công
+      // SỬA 3: Truyền email vào hàm login
+      await login(email, password); 
     } catch (error) {
-      // Lỗi đã được xử lý bởi interceptor trong apiService
       console.error('Login failed in component:', error);
+      // Không cần toast lỗi ở đây vì apiService hoặc AuthContext thường đã làm việc đó
     } finally {
       setLoading(false);
     }
@@ -50,12 +51,13 @@ const LoginPage = () => {
               
               <form onSubmit={handleSubmit}>
                 <div className="form-group">
+                  {/* SỬA 4: Cập nhật Input cho đúng chuẩn Email */}
                   <input
                     className="form-control"
-                    type="text"
-                    placeholder="Username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    type="email" // Đổi type thành email để có validation cơ bản
+                    placeholder="Email Address" // Đổi placeholder
+                    value={email} // Bind vào state email
+                    onChange={(e) => setEmail(e.target.value)}
                     required
                   />
                 </div>

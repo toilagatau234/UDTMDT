@@ -35,9 +35,15 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Hàm đăng nhập
-  const login = async (username, password) => {
+  const login = async (email, password) => {
     try {
-      const response = await apiService.post('/auth/login', { username, password });
+      // 1. SỬA ĐƯỜNG DẪN: từ '/auth/login' thành '/users/admin-login'
+      // 2. SỬA PAYLOAD: gửi object { email, password } thay vì { username, password }
+      const response = await apiService.post('/user/admin-login', { 
+          email: email, 
+          password: password 
+      });
+      
       const { token, user } = response.data;
 
       // Kiểm tra user có phải là admin không
@@ -52,9 +58,10 @@ export const AuthProvider = ({ children }) => {
       setUser(user);
 
       toast.success('Đăng nhập thành công!');
-      navigate('/');
+      navigate('/admin'); // Chuyển về Dashboard (thường là /admin thay vì /)
     } catch (error) {
       console.error('Login failed:', error);
+      // apiService đã xử lý toast lỗi, nhưng bạn có thể thêm xử lý riêng ở đây nếu cần
     }
   };
 

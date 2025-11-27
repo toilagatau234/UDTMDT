@@ -1,64 +1,40 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import apiService from '../../services/apiService';
-import useAddressData from '../../hooks/useAddressData';
 import { toast } from 'react-hot-toast';
-import { UserWrapper, UserPageHeader } from './style'
+import { UserWrapper, UserPageHeader } from './style'; // Tận dụng style cũ
 
 const UserAddPage = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    fullname: '',
-    email: '',
-    phone: '',
-    password: '',
-    role: 'user',
-    address: {
-      province: '',
-      district: '',
-      ward: '',
-      street: '',
-    },
-  });
   const [loading, setLoading] = useState(false);
-  const { provinces, districts, wards, handleProvinceChange, handleDistrictChange } = useAddressData();
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    phone: '',
+    role: 'customer'
+  });
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
-
-  const handleAddressChange = (e) => {
-    const { name, value } = e.target;
-    
-    // Lấy Tên (Name) thay vì ID (Id)
-    const selectedText = e.target.options[e.target.selectedIndex].text;
-    
-    setFormData(prev => ({
-      ...prev,
-      address: {
-        ...prev.address,
-        [name]: selectedText // Lưu tên (e.g., "Hà Nội")
-      }
-    }));
-    
-    // Cập nhật cascading dropdowns
-    if (name === 'province') {
-      handleProvinceChange(value); // value ở đây là ID
-    } else if (name === 'district') {
-      handleDistrictChange(value); // value ở đây là ID
-    }
+    setFormData({...formData, [e.target.name]: e.target.value});
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (formData.password !== formData.confirmPassword) {
+      toast.error('Mật khẩu nhập lại không khớp!');
+      return;
+    }
+
     setLoading(true);
     try {
-      await apiService.post('/users', formData);
-      toast.success('Thêm người dùng thành công!');
-      navigate('/users');
+      await apiService.post('/user/create', formData);
+      toast.success('Tạo user thành công!');
+      navigate('/admin/users'); // Chuyển về danh sách user
     } catch (error) {
-      console.error('Failed to add user:', error);
+      toast.error(error.response?.data?.message || 'Lỗi khi tạo user');
     } finally {
       setLoading(false);
     }
@@ -67,100 +43,51 @@ const UserAddPage = () => {
   return (
     <UserWrapper>
       <UserPageHeader>
-        <div>
-          <h2>Add User</h2>
-        </div>
-        <div>
-          <Link to="/admin/users" className="btn btn-primary">Back to Users</Link>
-        </div>
+        <h2>Add New User</h2>
+        <Link to="/admin/users" className="btn btn-secondary">Back</Link>
       </UserPageHeader>
 
       <div className="row">
-        <div className="col-sm-12">
+        <div className="col-md-12">
           <div className="card">
             <div className="card-body">
               <form onSubmit={handleSubmit}>
                 <div className="row">
-                  <div className="col-md-6">
-                    <div className="form-group">
-                      <label>Full Name</label>
-                      <input type="text" name="fullname" className="form-control" value={formData.fullname} onChange={handleChange} required />
-                    </div>
+                  <div className="col-md-6 mb-3">
+                    <label>First Name</label>
+                    <input type="text" name="firstName" className="form-control" value={formData.firstName} onChange={handleChange} required />
                   </div>
-                  <div className="col-md-6">
-                    <div className="form-group">
-                      <label>Email</label>
-                      <input type="email" name="email" className="form-control" value={formData.email} onChange={handleChange} required />
-                    </div>
+                  <div className="col-md-6 mb-3">
+                    <label>Last Name</label>
+                    <input type="text" name="lastName" className="form-control" value={formData.lastName} onChange={handleChange} required />
                   </div>
-                  <div className="col-md-6">
-                    <div className="form-group">
-                      <label>Phone</label>
-                      <input type="text" name="phone" className="form-control" value={formData.phone} onChange={handleChange} required />
-                    </div>
+                  <div className="col-md-6 mb-3">
+                    <label>Email</label>
+                    <input type="email" name="email" className="form-control" value={formData.email} onChange={handleChange} required />
                   </div>
-                  <div className="col-md-6">
-                    <div className="form-group">
-                      <label>Password</label>
-                      <input type="password" name="password" className="form-control" value={formData.password} onChange={handleChange} required />
-                    </div>
+                  <div className="col-md-6 mb-3">
+                    <label>Phone</label>
+                    <input type="text" name="phone" className="form-control" value={formData.phone} onChange={handleChange} />
                   </div>
-                  <div className="col-md-6">
-                    <div className="form-group">
-                      <label>Role</label>
-                      <select name="role" className="form-select" value={formData.role} onChange={handleChange}>
-                        <option value="user">User</option>
-                        <option value="admin">Admin</option>
-                      </select>
-                    </div>
+                  <div className="col-md-6 mb-3">
+                    <label>Password</label>
+                    <input type="password" name="password" className="form-control" value={formData.password} onChange={handleChange} required />
                   </div>
-                  <div className="col-md-6">
-                    <div className="form-group">
-                      <label>Street</label>
-                      <input 
-                        type="text" 
-                        name="street" 
-                        className="form-control" 
-                        value={formData.address.street} 
-                        onChange={(e) => setFormData(prev => ({ ...prev, address: { ...prev.address, street: e.target.value } }))} 
-                      />
-                    </div>
+                  <div className="col-md-6 mb-3">
+                    <label>Confirm Password</label>
+                    <input type="password" name="confirmPassword" className="form-control" value={formData.confirmPassword} onChange={handleChange} required />
                   </div>
-
-                  <div className="col-md-4">
-                    <div className="form-group">
-                      <label>Province</label>
-                      <select name="province" className="form-select" onChange={handleAddressChange} required>
-                        <option value="">Select Province</option>
-                        {provinces.map(p => <option key={p.Id} value={p.Id}>{p.Name}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  <div className="col-md-4">
-                    <div className="form-group">
-                      <label>District</label>
-                      <select name="district" className="form-select" onChange={handleAddressChange} required>
-                        <option value="">Select District</option>
-                        {districts.map(d => <option key={d.Id} value={d.Id}>{d.Name}</option>)}
-                      </select>
-                    </div>
-                  </div>
-                  <div className="col-md-4">
-                    <div className="form-group">
-                      <label>Ward</label>
-                      <select name="ward" className="form-select" onChange={handleAddressChange} required>
-                        <option value="">Select Ward</option>
-                        {wards.map(w => <option key={w.Id} value={w.Id}>{w.Name}</option>)}
-                      </select>
-                    </div>
+                  <div className="col-md-6 mb-3">
+                    <label>Role</label>
+                    <select name="role" className="form-select" value={formData.role} onChange={handleChange}>
+                      <option value="customer">Customer</option>
+                      <option value="admin">Admin</option>
+                    </select>
                   </div>
                 </div>
-
-                <div className="text-end">
-                  <button type="submit" className="btn btn-primary" disabled={loading}>
-                    {loading ? 'Saving...' : 'Save'}
-                  </button>
-                </div>
+                <button type="submit" className="btn btn-primary" disabled={loading}>
+                  {loading ? 'Creating...' : 'Create User'}
+                </button>
               </form>
             </div>
           </div>

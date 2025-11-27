@@ -35,12 +35,12 @@ const OrderPage = () => {
         search: search,
         status: status,
       };
-      const response = await apiService.get('/orders', { params });
-      
-      setOrders(response.data.orders || []);
+      const response = await apiService.get('/order/all-orders', { params });
+
+      setOrders(response.data.data || []);
       setTotalPages(response.data.totalPages || 1);
       setCurrentPage(response.data.currentPage || 1);
-      
+
     } catch (error) {
       console.error('Failed to fetch orders:', error);
       toast.error('Không thể tải đơn hàng.');
@@ -68,14 +68,12 @@ const OrderPage = () => {
   };
 
   // --- Xử lý Actions ---
-  
+
   // Cập nhật trạng thái
   const handleUpdateStatus = async (orderId, newStatus) => {
     const toastId = toast.loading('Đang cập nhật...');
     try {
-      await apiService.put(`/orders/status/${orderId}`, { status: newStatus });
-      toast.success('Cập nhật trạng thái thành công!', { id: toastId });
-      
+      await apiService.put(`/order/status/${orderId}`, { status: newStatus }); toast.success('Cập nhật trạng thái thành công!', { id: toastId });
       // Cập nhật UI
       setOrders(orders.map(o => o._id === orderId ? { ...o, status: newStatus } : o));
     } catch (error) {
@@ -96,7 +94,7 @@ const OrderPage = () => {
       {/* Thanh Search & Filter */}
       <OrderFilters>
         <div className="search-box">
-          <input 
+          <input
             type="text"
             className="form-control"
             placeholder="Tìm kiếm (Tên, SĐT khách hàng)..."
@@ -138,10 +136,11 @@ const OrderPage = () => {
                     ) : orders.length > 0 ? (
                       orders.map((order) => (
                         <tr key={order._id}>
-                          <td>{order.shippingAddress?.fullname || 'N/A'}</td>
+                          <td><small>#{order._id.slice(-6)}</small></td>
+                          <td>{order.shippingAddress?.fullName || 'Guest'}</td>
                           <td>{order.shippingAddress?.phone || 'N/A'}</td>
                           <td>{new Date(order.createdAt).toLocaleDateString('vi-VN')}</td>
-                          <td>{formatCurrency(order.totalAmount)}</td>
+                          <td>{formatCurrency(order.totalPrice)}</td>
                           <td>
                             <span className={`badge ${order.isPaid ? 'bg-success' : 'bg-warning'}`}>
                               {order.paymentMethod} {order.isPaid ? '(Paid)' : '(Not Paid)'}
@@ -149,11 +148,11 @@ const OrderPage = () => {
                           </td>
                           <td>
                             {/* Dropdown cập nhật trạng thái */}
-                            <select 
+                            <select
                               className={`form-select form-select-sm 
-                                ${order.status === 'Delivered' ? 'border-success' : 
-                                  order.status === 'Cancelled' ? 'border-danger' : 
-                                  order.status === 'Pending' ? 'border-warning' : 'border-primary'}`}
+                                ${order.status === 'Delivered' ? 'border-success' :
+                                  order.status === 'Cancelled' ? 'border-danger' :
+                                    order.status === 'Pending' ? 'border-warning' : 'border-primary'}`}
                               value={order.status}
                               onChange={(e) => handleUpdateStatus(order._id, e.target.value)}
                             >
@@ -163,7 +162,7 @@ const OrderPage = () => {
                             </select>
                           </td>
                           <td className="text-end">
-                            <Link to={`/order/detail/${order._id}`} className="btn btn-sm btn-info">
+                            <Link to={`/admin/order/detail/${order._id}`} className="btn btn-sm btn-info">
                               <i className="fas fa-eye"></i>
                             </Link>
                           </td>
@@ -179,9 +178,9 @@ const OrderPage = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Phân trang */}
-      <Pagination 
+      <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={handlePageChange}

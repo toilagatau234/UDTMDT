@@ -30,7 +30,7 @@ const AppRoutes = () => {
       </Route>
 
       {/* ProtectedRoutes: Yêu cầu xác thực, sau đó bọc các trang bằng AdminLayout */}
-      <Route element={<PublicRoutes />}>
+      <Route element={<ProtectedRoutes />}>
         <Route element={<AdminLayout />}>
           <Route path="/" element={<DashboardPage />} />
           <Route path="categories" element={<CategoryPage />} />

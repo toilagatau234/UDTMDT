@@ -1,224 +1,204 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import apiService from '../../services/apiService';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { toast } from 'react-hot-toast';
-import {
-  DashboardWrapper,
-  DashboardCards,
-  Card,
-  ChartSection,
-  WelcomeCard,
-  StatCard,
-  ChartCard,
-  OrdersTable,
-  TableResponsive
-} from './style';
+import { Link } from 'react-router-dom';
 
 const DashboardPage = () => {
-  const [stats, setStats] = useState(null);
-  const [pendingOrders, setPendingOrders] = useState([]);
-  const [revenueData, setRevenueData] = useState([]);
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalProducts: 0,
+    totalOrders: 0,
+    totalRevenue: 0,
+    recentOrders: []
+  });
   const [loading, setLoading] = useState(true);
 
-  // Hàm định dạng tiền tệ
-  const formatCurrency = (value) => {
-    if (value === undefined || value === null) return '0 ₫';
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
-  };
-
   useEffect(() => {
-    const fetchDashboardData = async () => {
+    const fetchStats = async () => {
       try {
-        setLoading(true);
-        // Gọi đồng thời các API
-        const [statsRes, ordersRes, chartRes] = await Promise.all([
-          apiService.get('/statistical/all'),
-          apiService.get('/orders?status=Pending&limit=5'), // Giả sử API hỗ trợ limit
-          apiService.get('/statistical/revenue-chart')
-        ]);
-
-        // Set Stats
-        setStats(statsRes.data);
-
-        // Set Pending Orders
-        setPendingOrders(ordersRes.data.orders || ordersRes.data || []);
-
-        // Set Chart Data
-        // Chuyển đổi dữ liệu cho recharts
-        const chartData = chartRes.data.map(item => ({
-          name: `Tháng ${item.month}`,
-          DoanhThu: item.totalRevenue, // Tên key này phải khớp với <Bar dataKey="..."/>
-        }));
-        setRevenueData(chartData);
-
+        // Gọi API chúng ta vừa tạo ở Bước 2
+        const response = await apiService.get('/statistical/dashboard');
+        if (response.data.success) {
+          setStats(response.data.data);
+        }
       } catch (error) {
-        console.error('Failed to fetch dashboard data:', error);
-        toast.error('Không thể tải dữ liệu dashboard. API có thể chưa sẵn sàng.');
-        // Đặt giá trị mặc định để component không bị crash
-        setStats({ totalOrders: 0, totalRevenue: 0, totalProducts: 0, totalUsers: 0 });
-        setPendingOrders([]);
-        setRevenueData([]);
+        console.error('Lỗi tải thống kê:', error);
+        toast.error('Không thể tải dữ liệu Dashboard');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchDashboardData();
+    fetchStats();
   }, []);
 
   if (loading) {
-    return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: '80vh' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-      </div>
-    );
+    return <div className="text-center mt-5">Đang tải dữ liệu...</div>;
   }
 
   return (
-    <DashboardWrapper>
-      <DashboardCards>
-        <WelcomeCard>
-          <h3>Welcome Admin!</h3>
-          <p>Dashboard</p>
-        </WelcomeCard>
-
+    <div className="content container-fluid">
+      {/* --- HEADER --- */}
+      <div className="page-header">
         <div className="row">
-          <div className="col-xl-3 col-sm-6 col-12">
-            <StatCard>
-              <div className="dash-widget-header">
-                <span className="dash-widget-icon text-primary">
-                  <i className="fas fa-shipping-fast"></i>
-                </span>
-                <div className="dash-count">
-                  <h3>{stats?.totalOrders || 0}</h3>
-                </div>
-              </div>
-              <div className="dash-widget-info">
-                <h6 className="text-muted">Total Orders</h6>
-              </div>
-            </StatCard>
+          <div className="col-sm-12">
+            <h3 className="page-title">Welcome Admin!</h3>
+            <ul className="breadcrumb">
+              <li className="breadcrumb-item active">Dashboard</li>
+            </ul>
           </div>
+        </div>
+      </div>
 
-          <div className="col-xl-3 col-sm-6 col-12">
-            <StatCard>
+      {/* --- CARDS THỐNG KÊ --- */}
+      <div className="row">
+        {/* Card 1: Users */}
+        <div className="col-xl-3 col-sm-6 col-12">
+          <div className="card">
+            <div className="card-body">
               <div className="dash-widget-header">
-                <span className="dash-widget-icon text-success">
-                  <i className="fas fa-dollar-sign"></i>
-                </span>
-                <div className="dash-count">
-                  <h3>{formatCurrency(stats?.totalRevenue)}</h3>
-                </div>
-              </div>
-              <div className="dash-widget-info">
-                <h6 className="text-muted">Total Revenue</h6>
-              </div>
-            </StatCard>
-          </div>
-
-          <div className="col-xl-3 col-sm-6 col-12">
-            <StatCard>
-              <div className="dash-widget-header">
-                <span className="dash-widget-icon text-danger">
-                  <i className="fas fa-box"></i>
-                </span>
-                <div className="dash-count">
-                  <h3>{stats?.totalProducts || 0}</h3>
-                </div>
-              </div>
-              <div className="dash-widget-info">
-                <h6 className="text-muted">Total Products</h6>
-              </div>
-            </StatCard>
-          </div>
-
-          <div className="col-xl-3 col-sm-6 col-12">
-            <StatCard>
-              <div className="dash-widget-header">
-                <span className="dash-widget-icon text-warning">
+                <span className="dash-widget-icon bg-primary">
                   <i className="fas fa-users"></i>
                 </span>
                 <div className="dash-count">
-                  <h3>{stats?.totalUsers || 0}</h3>
+                  <h3>{stats.totalUsers}</h3>
                 </div>
               </div>
               <div className="dash-widget-info">
-                <h6 className="text-muted">Total Users</h6>
+                <h6 className="text-muted">Users</h6>
+                <div className="progress progress-sm">
+                  <div className="progress-bar bg-primary w-50"></div>
+                </div>
               </div>
-            </StatCard>
+            </div>
           </div>
         </div>
-      </DashboardCards>
 
-      <ChartSection>
-        <ChartCard>
-          <div className="card-header">
-            <h4>Revenue</h4>
+        {/* Card 2: Products */}
+        <div className="col-xl-3 col-sm-6 col-12">
+          <div className="card">
+            <div className="card-body">
+              <div className="dash-widget-header">
+                <span className="dash-widget-icon bg-success">
+                  <i className="fas fa-box"></i>
+                </span>
+                <div className="dash-count">
+                  <h3>{stats.totalProducts}</h3>
+                </div>
+              </div>
+              <div className="dash-widget-info">
+                <h6 className="text-muted">Products</h6>
+                <div className="progress progress-sm">
+                  <div className="progress-bar bg-success w-50"></div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="card-body">
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart
-                data={revenueData}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis tickFormatter={(value) => formatCurrency(value)} />
-                <Tooltip formatter={(value) => formatCurrency(value)} />
-                <Legend />
-                <Bar dataKey="DoanhThu" fill="#8884d8" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </ChartCard>
+        </div>
 
-        <OrdersTable>
-          <div className="card-header">
-            <h4>Pending Orders</h4>
+        {/* Card 3: Orders */}
+        <div className="col-xl-3 col-sm-6 col-12">
+          <div className="card">
+            <div className="card-body">
+              <div className="dash-widget-header">
+                <span className="dash-widget-icon bg-warning">
+                  <i className="fas fa-shopping-cart"></i>
+                </span>
+                <div className="dash-count">
+                  <h3>{stats.totalOrders}</h3>
+                </div>
+              </div>
+              <div className="dash-widget-info">
+                <h6 className="text-muted">Orders</h6>
+                <div className="progress progress-sm">
+                  <div className="progress-bar bg-warning w-50"></div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="card-body">
-            <TableResponsive>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Customer</th>
-                    <th>Date</th>
-                    <th>Total</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {pendingOrders.length > 0 ? (
-                    pendingOrders.map((order) => (
-                      <tr key={order._id}>
-                        <td>
-                          <h2 className="table-avatar">
-                            {order.shippingAddress?.fullname || 'N/A'}
-                          </h2>
-                        </td>
-                        <td>{new Date(order.createdAt).toLocaleDateString('vi-VN')}</td>
-                        <td>{formatCurrency(order.totalAmount)}</td>
-                        <td>
-                          <Link to={`/order/detail/${order._id}`} className="btn-primary">
-                            View
-                          </Link>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
+        </div>
+
+        {/* Card 4: Revenue */}
+        <div className="col-xl-3 col-sm-6 col-12">
+          <div className="card">
+            <div className="card-body">
+              <div className="dash-widget-header">
+                <span className="dash-widget-icon bg-danger">
+                  <i className="fas fa-money-bill-wave"></i>
+                </span>
+                <div className="dash-count">
+                  {/* Format tiền tệ VND */}
+                  <h3>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(stats.totalRevenue)}</h3>
+                </div>
+              </div>
+              <div className="dash-widget-info">
+                <h6 className="text-muted">Revenue</h6>
+                <div className="progress progress-sm">
+                  <div className="progress-bar bg-danger w-50"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* --- BẢNG ĐƠN HÀNG MỚI NHẤT --- */}
+      <div className="row">
+        <div className="col-md-12 d-flex">
+          <div className="card card-table flex-fill">
+            <div className="card-header">
+              <h4 className="card-title float-start">Recent Orders</h4>
+              <Link to="/admin/orders" className="btn btn-outline-primary float-end">View all</Link>
+            </div>
+            <div className="card-body">
+              <div className="table-responsive">
+                <table className="table table-hover table-center">
+                  <thead>
                     <tr>
-                      <td colSpan="4" style={{ textAlign: 'center' }}>No pending orders found.</td>
+                      <th>Order ID</th>
+                      <th>Customer</th>
+                      <th>Date</th>
+                      <th>Amount</th>
+                      <th>Status</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </TableResponsive>
+                  </thead>
+                  <tbody>
+                    {stats.recentOrders.length > 0 ? (
+                      stats.recentOrders.map((order) => (
+                        <tr key={order._id}>
+                          <td>#{order._id.substring(0, 8)}...</td>
+                          <td>
+                            {order.user 
+                              ? `${order.user.lastName || ''} ${order.user.firstName}` 
+                              : 'Khách vãng lai'}
+                          </td>
+                          <td>{new Date(order.createdAt).toLocaleDateString('vi-VN')}</td>
+                          <td>
+                            {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(order.totalPrice)}
+                          </td>
+                          <td>
+                            <span className={`badge badge-pill ${
+                              order.status === 'Delivered' ? 'bg-success' : 
+                              order.status === 'Cancelled' ? 'bg-danger' : 'bg-warning'
+                            }`}>
+                              {order.status || 'Pending'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="5" className="text-center">Chưa có đơn hàng nào</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
-        </OrdersTable>
-      </ChartSection>
-    </DashboardWrapper>
+        </div>
+      </div>
+    </div>
   );
 };
 

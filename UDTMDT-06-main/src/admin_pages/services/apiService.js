@@ -34,7 +34,7 @@ apiService.interceptors.response.use(
       localStorage.removeItem('adminToken');
       localStorage.removeItem('adminUser');
       // Chuyển hướng về trang login
-      window.location.href = '/login';
+      window.location.href = '/admin/login';
     } else {
       // Hiển thị lỗi chung
       const message = error.response?.data?.message || error.message || 'Có lỗi xảy ra';

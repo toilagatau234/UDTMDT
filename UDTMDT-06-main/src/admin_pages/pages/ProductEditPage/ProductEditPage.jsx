@@ -94,7 +94,7 @@ const ProductEditPage = () => {
         
       } catch (error) {
         toast.error('Không thể tải dữ liệu sản phẩm.');
-        navigate('/products');
+        navigate('/admin/products');
       } finally {
         setPageLoading(false);
       }
@@ -198,7 +198,7 @@ const ProductEditPage = () => {
           <h2>Edit Product</h2>
         </div>
         <div>
-          <Link to="/products" className="btn btn-primary">Back to Products</Link>
+          <Link to="/admin/products" className="btn btn-primary">Back to Products</Link>
         </div>
       </ProductHeader>
 
