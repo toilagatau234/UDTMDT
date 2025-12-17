@@ -26,7 +26,7 @@ const app = express();
 const port = process.env.PORT || 8080;
 
 // --- CẤU HÌNH CORS ---
-const allowedOrigins = ['http://localhost:3000', 'http://127.0.0.1:3000',];
+const allowedOrigins = ['http://localhost:3000', 'http://127.0.0.1:3000', 'https://udtmdt.vercel.app'];
 
 app.use((req, res, next) => {
     const origin = req.headers.origin;
